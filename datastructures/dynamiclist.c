@@ -7,11 +7,11 @@ typedef struct {
   unsigned long *array; //vettore di unsigned long
   size_t used; //lunghezza usata
   size_t size; //lunghezza dell'array totale
- 
+
   pthread_mutex_t mutex; //mutex per evitare che i thread accedano alla stessa struttura nello stesso momento
 } arraylist;
 /*Inizializza l'arraylist con la lunghezza dell'array inziale passata in input,
-la mutex non è inizializzata perché potrebbe non servire sempre, bisogna inizializzarla 
+la mutex non è inizializzata perché potrebbe non servire sempre, bisogna inizializzarla
 solo di volontà propria*/
 void initArray(arraylist *a, size_t initialSize) {
   a->array = calloc(initialSize, sizeof(unsigned long)); //alloca il vettore
@@ -36,10 +36,10 @@ int insertAt(arraylist* a, unsigned long where, unsigned long element){
     a->size *= 2;
     a->array = realloc(a->array, a->size * sizeof(unsigned long));
   }
-  
+
   for(unsigned long i = a->used; i >= where && i > 0; i--)
     a->array[i] = a->array[i-1]; //mette una posizione avanti tutti gli elementi che si trovano dopo where
-  
+
   a->array[where] = element; //mette alla posizione indicata l'elemento
   a->used++; //incrementa gli usati
 
@@ -63,12 +63,9 @@ void trim_list(arraylist* a){
 void removeElement(arraylist* a, unsigned long element){
   short flag = 0; //flag di status per indicare se è stato rimosso l'elemento
   for(size_t i = 0; i < a->used; i++){ //itera sull'array
-    
-    if(flag) 
-      a->array[i-1] = a->array[i]; //se è stato rimosso l'elemento allora metti il successivo alla posizione precedente
 
-    else if(element == a->array[i]){ //altrimenti se l'elemento è == a quello nella posizione i dell'array allora esegui le azioni
-      a->array[i] = 0; //metti a zero l'elemento
+   if(element == a->array[i]){ //altrimenti se l'elemento è == a quello nella posizione i dell'array allora esegui le azioni
+      a->array[i] = a->array[a->used-1]; //fai uno switch dell'ultimo elemento con quello corrente
       flag++; // incrementa la flag di status per indicare che è avvenuto il cambiamento
     }
   }
@@ -90,7 +87,7 @@ void removeElement(arraylist* a, unsigned long element){
 //     insertArray(&a, i);  // automatically resizes as necessary
 //   printf("usata: %ld\n", a.used);  // print number of elements
 
-//   // removeElement(&a, 1);  
+//   // removeElement(&a, 1);
 //   // removeElement(&a, 5);
 //   // removeElement(&a, 9);
 
@@ -101,6 +98,11 @@ void removeElement(arraylist* a, unsigned long element){
 //   for (i = 0; i < a.used; i++)
 //     printf("%d\n", a.array[i]);
 //   printf("size totale: %lu\n", a.size);
+
+//   removeElement(&a, 100);
+//    for (i = 0; i < a.used; i++)
+//     printf("%d\n", a.array[i]);
+//   printf("size : %lu\n", a.used);
 //   return 0;
 // }
 
