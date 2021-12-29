@@ -1,4 +1,4 @@
-#include "./crystalline_growth/crystalline_growth.c"
+#include "crystalline_growth/crystalline_growth.c"
 
 
 size_t string_to_size_t(const char*);
@@ -18,8 +18,7 @@ int main(int argc, const char* argv[]) {
 
 size_t string_to_size_t(const char* c){
     size_t len = 0;
-    if (1 == sscanf(c, "%zu", &len))
-    {
+    if (1 == sscanf(c, "%zu", &len)){
         return len;
     }
     return -1;
