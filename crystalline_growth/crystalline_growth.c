@@ -79,7 +79,8 @@ void init_field(const size_t len_x, const size_t len_y, const size_t posizione_s
         seed->particles = 1;
         seed->status = 1;
         
-        // creo una array con le celle che si trovano sul perimetro della matrice e genero su di esso casualmente le particelle
+        // creo una array con le celle che si trovano sul perimetro
+        // della matrice e genero su di esso casualmente le particelle
         cell* perimeter_cells [len_x * 2 + len_y * 2];
         size_t index = 0;
         for(size_t x = 0; x < len_x; x++){
@@ -108,7 +109,7 @@ bool is_in_bounds(size_t x, size_t y){
 }
 
 bool check_crystal_neighbor(cell* c){
-        short points []= {-1, -1,
+        static short points []= {-1, -1,
                          -1, 0,
                          -1, 1,
                           0, -1,
@@ -162,12 +163,12 @@ void move_and_precrystalize(){
 
                         short x_movement, y_movement;
                         do{
-                                x_movement = cella->x + rand()%2 * (rand()%2? 1: -1); // pick random x direction
+                                x_movement = cella->x + (rand()%2 * (rand()%2? 1: -1)); // pick random x direction
                                 y_movement = cella->y + (rand()%2 * (rand()%2? 1: -1)); // pick random y direction
                         }while(!is_in_bounds(x_movement, y_movement)); // finché non sceglie una direzione corretta continua a scegliere randomicamente
 
                         // field[cella->x][cella->y].particles--;
-                        cella->x = x_movement;
+                        cella->x = x_movement; // NON VA BENE
                         cella->y = y_movement;
 
                         printf("\tScelta casella di movimento: (%zu, %zu)\n", cella->x, cella->y);
@@ -198,8 +199,13 @@ void move_and_precrystalize(){
                                 print_cell(cell_moved_in);
                                 printf("\n");
 
-                                removeElement(&particles_movement, cella);
-                                insertArray(&precrystalized_particles, cella);
+                                removeElement(&particles_movement, cella); // non va bene
+                                insertArray(&precrystalized_particles, cella); // non va bene
+                        }
+                        else{ // se si trova un una casella normale
+                             // aggiunge la cella in cui si è mosso nella lista delle celle in cui ci sono particelle da muovere
+                             // nel caso il numero di particelle sia 0
+                             // aggiorno il numero di particelle spostando le particles_moved_in in particles
                         }
                 }
             }

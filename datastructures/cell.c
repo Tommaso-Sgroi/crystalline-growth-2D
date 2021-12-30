@@ -2,8 +2,8 @@
 
 typedef struct {
 
-    size_t particles; // particelle che si tovano nella cella e si sono mosse O non possono muoversi
-    size_t particles_moved_in; //particelle mosse in una cella
+    size_t particles; // particelle che si tovano nella cella e si sono mosse O non possono muoversi // MUOVE DA QUA
+    size_t particles_moved_in; //particelle mosse in una cella // INSERISCE QUA
     short status; // -1 non è un cristallo // 0 precristallizzazione // 1 cristallo 
     
     size_t x;
