@@ -1,7 +1,9 @@
-#include <stdio.h>
-#include <stdbool.h>
 #include "../datastructures/dynamiclist.c"
 
+struct {
+        cell** field;
+        size_t len_x, len_y;
+} plan;
 
 cell** field;
 
@@ -48,12 +50,13 @@ matrix:
 
  inzializzo il campo (la matrice che contiene le celle per le particelle)
 */
-void build_field(const size_t x, const size_t y){
+cell** build_field(const size_t x, const size_t y){
 
         field = (cell**) calloc(x, sizeof(cell*));
         for(size_t i = 0; i < x; i++){
                 field[i] = (cell*) calloc(y, sizeof(cell)); // TODO PARALLELIZZARE
         }
+        return field;
 }
 
 size_t rand_size_t() {
@@ -104,9 +107,7 @@ void init_field(const size_t len_x, const size_t len_y, const size_t posizione_s
 
 }
 
-bool is_in_bounds(size_t x, size_t y){
-        return x >= 0 && x < len_x && y >= 0 && y < len_y;
-}
+
 
 bool check_crystal_neighbor(cell* c){
         static short points []= {-1, -1,
@@ -252,6 +253,10 @@ int start_crystalline_growth(const size_t x, const size_t y, const size_t iteraz
 
         len_x = x;
         len_y = y;
+       
+        plan.len_x = x;
+        plan.len_y = y;
+
         printf("x: %zu\ny: %zu\nIterazioni: %zu\nNumero particelle: %zu\nPosizione seed: (%zu, %zu)\n",
             x,      y,      iterazioni,      numero_particelle,      posizione_seed_x, posizione_seed_y);
         
@@ -260,7 +265,7 @@ int start_crystalline_growth(const size_t x, const size_t y, const size_t iteraz
         initArray(&precrystalized_particles, x * 2 + y * 2);
         
         //costruisco il campo e lo inizializzo
-        build_field(x, y);
+        plan.field = build_field(x, y);
         init_field(x, y, posizione_seed_x, posizione_seed_y, numero_particelle);
         
         print_field();

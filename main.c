@@ -1,4 +1,5 @@
-#include "crystalline_growth/crystalline_growth.c"
+#include "crystalline_growth/crystallinie_growth.c"
+
 
 
 size_t string_to_size_t(const char*);

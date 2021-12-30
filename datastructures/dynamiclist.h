@@ -1,11 +1,9 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include "cell.c"
+#include "space.h"
 
 /*struttura arraylist contiene un vettore di unsigned long che rappresentano il valore numerico della locazione in memoria dell'oggetto
 oppure di contenere un valore numerico positivo (come il client fd)*/
 typedef struct {
-  cell **array; //vettore di unsigned long
+  particle **array; //vettore di unsigned long
   size_t used; //lunghezza usata
   size_t size; //lunghezza dell'array totale
 
@@ -15,27 +13,27 @@ typedef struct {
 la mutex non è inizializzata perché potrebbe non servire sempre, bisogna inizializzarla
 solo di volontà propria*/
 void initArray(arraylist *a, size_t initialSize) {
-  a->array = calloc(initialSize, sizeof(cell*)); //alloca il vettore
+  a->array = calloc(initialSize, sizeof(particle*)); //alloca il vettore
   a->used = 0; //setta a 0 l'utilizzo della lista
   a->size = initialSize; //inserisce il contatore all'inizial size della lista
 }
 
 /*inserisce elemento in coda alla lista*/
-void insertArray(arraylist *a, cell* element) {
+void insertArray(arraylist *a, particle* element) {
   if(a->used == a->size) { //se gli usati sono uguali agli utilizzati allora bisogna riallocare l'array
     a->size *= 2; //la nuova size è uguale al doppio della vecchia
-    a->array = realloc(a->array, a->size * sizeof(cell*));//realloca l'array
+    a->array = realloc(a->array, a->size * sizeof(particle*));//realloca l'array
   }
   a->array[a->used++] = element; //inserisce l'elemento all'untima posizione e la incrementa
 }
 
 /*inserisce l'elemento a una posizione specifica facendo swappare di una posizione in avanti gli altri elementi*/
-int insertAt(arraylist* a, size_t where, cell* element){
+int insertAt(arraylist* a, size_t where, particle* element){
   if(where < 0 || where >= a->used) return 0; //controlla se la posizione è valida
 
   if(a->used == a->size) { //incrementa la size se è finita (vedere sopra)
     a->size *= 2;
-    a->array = realloc(a->array, a->size * sizeof(cell*));
+    a->array = realloc(a->array, a->size * sizeof(particle*));
   }
 
   for(size_t i = a->used; i >= where && i > 0; i--)
@@ -61,7 +59,7 @@ void trim_list(arraylist* a){
 }
 
 /*rimuove l'elemento dall'arraylist facendo retrocedere tutti gli altri elementi*/
-void removeElement(arraylist* a, cell* element){
+void removeElement(arraylist* a, particle* element){
   short flag = 0; //flag di status per indicare se è stato rimosso l'elemento
   for(size_t i = 0; i < a->used; i++){ //itera sull'array
 
@@ -79,8 +77,7 @@ void removeElement(arraylist* a, cell* element){
 
 void print_array(arraylist* a){
   for(size_t i = 0; i < a->used; i++){
-    printf("Particles: %zu\nParicles moved in: %zu\nStatus: %i\nCoordinates: (%zu, %zu)\n", 
-    a->array[i]->particles, a->array[i]->particles_moved_in, a->array[i]->status, a->array[i]->x, a->array[i]->y);
+    printf("Coordinates: (%zu, %zu)\n", a->array[i]->x, a->array[i]->y);
   }
 }
 
