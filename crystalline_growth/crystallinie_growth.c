@@ -10,7 +10,7 @@
 
 struct space space;
 
-arraylist particles;
+arraylist particles, precrystallized_particles;
 
 void move_and_precrystalize(){
 
@@ -88,41 +88,7 @@ void move_and_precrystalize(){
         //         }
         //     }
         // }
-        
-        // //rimuovo tutte le celle che non contengono più particelle
-        // printf("rimuovo tutte le celle che non contengono più particelle:\n");
-        // for(size_t i = 0; i < particles_movement.used; i++){
-        //         cell* c = particles_movement.array[i];
-        //         if(c->particles == 0 &&
-        //                 c->particles_moved_in == 0) // se non ci sono più particelle ne mosse dentro ne stabili
-        //         {
-        //                 printf("RIMOSSO:\n");
-        //                 print_cell(c);
-        //                 printf("\n");
-        //                 removeElement(&particles_movement, c);
-        //         }
-        //         else{
-        //                 printf("AGGIORNO:\n");
-        //                 print_cell(c);
-        //                 c->particles = c->particles_moved_in;
-        //                 print_cell(c);
-        //                 printf("\n");
-        //         }
-        // }
 
-
-        // // cristallizzo tutte le celle in precristallizzazione
-        // printf("Cristallizzo le particelle rimanenti:\n");
-        // for(size_t i = 0; i < precrystalized_particles.used; i++){
-
-        //         cell* c = precrystalized_particles.array[i];
-        //         printf("AGGIORNO:\n");
-        //         print_cell(c);
-        //         c->status = 1;
-        //         removeElement(&precrystalized_particles, c);
-        //         print_cell(c);
-        //         printf("\n");
-        // }
 }
 
 int start_crystalline_growth(const size_t x, const size_t y, const size_t iterazioni, const size_t numero_particelle,
@@ -135,7 +101,8 @@ int start_crystalline_growth(const size_t x, const size_t y, const size_t iteraz
             x,      y,      iterazioni,      numero_particelle,      posizione_seed_x, posizione_seed_y);
         
         //inizializzo la lista delle particelle
-        initArray(&particles, numero_particelle);
+        initArray(&particles, numero_particelle + 1);
+        initArray(&precrystallized_particles, numero_particelle / 4);
         
         
         //costruisco il campo e lo inizializzo
@@ -146,6 +113,8 @@ int start_crystalline_growth(const size_t x, const size_t y, const size_t iteraz
         move_and_precrystalize();
         printf("\n\n");
         print_field(&space);
+
+        printf("%zu\n", RAND_SIZE_T());
 
         // for(int x = 0; x < 50; x++){
         // short x_movement = rand()%2 * (rand()%2? 1: -1);
