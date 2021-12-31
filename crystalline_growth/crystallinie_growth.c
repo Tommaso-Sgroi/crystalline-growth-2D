@@ -8,7 +8,6 @@
 // static size_t len_x, len_y;
 
 
-struct space space;
 
 arraylist particles, precrystallized_particles;
 
@@ -94,8 +93,11 @@ void move_and_precrystalize(){
 int start_crystalline_growth(const size_t x, const size_t y, const size_t iterazioni, const size_t numero_particelle,
            const size_t posizione_seed_x, const size_t posizione_seed_y){
 
-        space.len_x = x;
-        space.len_y = y;
+        struct space space;
+        space.len_x=x;
+        space.len_y=y;
+        
+        arraylist particles, precrystallized_particles;
 
         printf("x: %zu\ny: %zu\nIterazioni: %zu\nNumero particelle: %zu\nPosizione seed: (%zu, %zu)\n",
             x,      y,      iterazioni,      numero_particelle,      posizione_seed_x, posizione_seed_y);
@@ -106,7 +108,8 @@ int start_crystalline_growth(const size_t x, const size_t y, const size_t iteraz
         
         
         //costruisco il campo e lo inizializzo
-        space.field = build_field(x, y);
+        //space.field = build_field(x, y);
+        build_field(&space);
         init_field(&space, x, y, posizione_seed_x, posizione_seed_y);
         
         print_field(&space);

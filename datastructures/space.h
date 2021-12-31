@@ -27,14 +27,24 @@ matrix:
 
  inzializzo il campo (la matrice che contiene le shorte per le partishorte)
 */
-short** build_field(const size_t x, const size_t y){
+/*short** build_field(const size_t x, const size_t y){
 
         short** field = (short**) calloc(x, sizeof(short*));
         for(size_t i = 0; i < x; i++){
                 field[i] = (short*) calloc(y, sizeof(short)); // TODO PARALLELIZZARE
         }
         return field;
-}
+}*/
+
+void build_field(struct space* space)
+{
+        space->field = (short**) calloc(space->len_x, sizeof(short*));
+        for(size_t i = 0; i < space->len_x; i++){
+                space->field[i] = (short*) calloc(space->len_y, sizeof(short)); // TODO PARALLELIZZARE
+        }
+
+};
+
 
 void init_field(struct space* space, const size_t len_x, const size_t len_y, const size_t posizione_seed_x, const size_t posizione_seed_y/*, const size_t numero_partishorte*/){ 
         for(size_t x = 0; x < len_x; x++){
