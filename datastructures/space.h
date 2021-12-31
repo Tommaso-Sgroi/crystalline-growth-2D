@@ -1,12 +1,21 @@
 #include "../crystalline_growth/utility.h"
+
 #include <stdio.h>
 #include <stdbool.h>
 
-//_______________________________PARTIshortE_______________________________________-
+//_______________________________PARTICLE_______________________________________-
 typedef struct {
     size_t x, y;
 }particle;
 
+/*Alloca nell'heap una nuova particella*/
+particle* new_particle(){
+        return malloc(sizeof(particle));
+}
+
+void print_particle(particle* p){
+        printf("Paticle at: (%zu, %zu)\n", p->x, p->y);
+}
 
 //__________________________SPACE__________________________________
 struct space{
@@ -47,14 +56,16 @@ void build_field(struct space* space)
 
 
 void init_field(struct space* space, const size_t posizione_seed_x, const size_t posizione_seed_y/*, const size_t numero_partishorte*/){ 
-       /* for(size_t x = 0; x < space->len_x; x++){
+       for(size_t x = 0; x < space->len_x; x++){
                 for(size_t y = 0; y < space->len_y; y++){
                         space->field[x][y] = -1; // inizializzo la shorta
                 }
-        }*/
         space->field[posizione_seed_x][posizione_seed_y] = 1;                       
-
+       }
 }
+
+
+
 
 #define IS_IN_BOUNDS(x, y, len_x, len_y) (x >= 0 && x < len_x && y >= 0 && y < len_y) // poi voglio vedere se e cosa cambia utilizzando questa macro o la funzione
 
@@ -73,7 +84,7 @@ bool check_crystal_neighbor(struct space* space, particle* p){
                 int new_y = p->y + dy;
 
                 if(is_in_bounds(new_x, new_y, space->len_x, space->len_y) && 
-                  space->field[new_x][new_y] == 1){
+                        space->field[new_x][new_y] == 1){
                         return true;
                 }
         }
@@ -86,17 +97,17 @@ void print_field(struct space* space){
     struct space s = *space;
     for(size_t i = 0; i < s.len_x; i++){
         for(size_t j = 0; j < s.len_y; j++){
-                char* c;
-                if(s.field[i][j] == -1){
-                        c = " P";
-                }
-                if(s.field[i][j] == 0){
-                        c = "PC";
-                }
-                if(s.field[i][j] == 1){
-                        c = " C";
-                }
-                printf("%s%i ", c, s.field[i][j]);
+        char* c;
+        if(s.field[i][j] == -1){
+                c = " P";
+        }
+        if(s.field[i][j] == 0){
+                c = "PC";
+        }
+        if(s.field[i][j] == 1){
+                c = " C";
+        }
+        printf("%s%i ", c, s.field[i][j]);
         }
         printf("\n");
     }

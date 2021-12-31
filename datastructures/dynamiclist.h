@@ -58,13 +58,17 @@ void trim_list(arraylist* a){
   initArray(a, 10);
 }
 
+/*scambia l'elemento all'indidce i con l'ultimo elemento*/
+void switch_last(arraylist* a, size_t i){
+  a->array[i] = a->array[a->used-1];
+}
 /*rimuove l'elemento dall'arraylist facendo retrocedere tutti gli altri elementi*/
 void removeElement(arraylist* a, particle* element){
   short flag = 0; //flag di status per indicare se è stato rimosso l'elemento
   for(size_t i = 0; i < a->used; i++){ //itera sull'array
 
    if(element == a->array[i]){ //altrimenti se l'elemento è == a quello nella posizione i dell'array allora esegui le azioni
-      a->array[i] = a->array[a->used-1]; //fai uno switch dell'ultimo elemento con quello corrente
+      switch_last(a, i); //fai uno switch dell'ultimo elemento con quello corrente
       flag++; // incrementa la flag di status per indicare che è avvenuto il cambiamento
     }
   }
@@ -77,32 +81,19 @@ void removeElement(arraylist* a, particle* element){
 
 //rimuove l'elemento a una posizione specifica scambiando con il primo elemento e cambiando il puntatore 
 void removeAt(arraylist* a, size_t where){
-  if(where < 0 || where >= a->used) return 0; //controlla se la posizione è valida
+  if(where < 0 || where >= a->used) return; //controlla se la posizione è valida
 
-  a->array[where] = a->array[a->used-1]; //fai uno switch dell'ultimo elemento con quello corrente
-  //a->array[a->used-1] = 0; //metti a 0 l'ultimo elemento recentemente puntato
-  a->used--; //decrementa used
-}
-
-void build_vector_particle(arraylist* particles, int numero_particelle, size_t len_x, size_t len_y, int posizione_seed_x, int posizione_seed_y)
-{
-        for (int i=0; i<numero_particelle; i++){
-                particle* info;
-                do
-                {
-                        info->x=rand()%len_x;
-                        info->y=rand()%len_y;
-                }while(info->x==posizione_seed_x && info->y==posizione_seed_y);
-                insertArray(&particles, &info);
-        }
-        
-
+   switch_last(a, where); //fai uno switch dell'ultimo elemento con quello corrente
+   a->array[a->used-1] = 0; //metti a 0 l'ultimo elemento recentemente puntato
+   a->used--; //decrementa used
+   // a->array++; // ???
 }
 
 
 void print_array(arraylist* a){
   for(size_t i = 0; i < a->used; i++){
     printf("Coordinates: (%zu, %zu)\n", a->array[i]->x, a->array[i]->y);
+    // printf("%i\n", a->array[i]);
   }
 }
 
@@ -128,7 +119,7 @@ void print_array(arraylist* a){
 //     printf("%d\n", a.array[i]);
 //   printf("size totale: %lu\n", a.size);
 
-//   removeElement(&a, 100);
+//   removeAt(&a, 0);
 //    for (i = 0; i < a.used; i++)
 //     printf("%d\n", a.array[i]);
 //   printf("size : %lu\n", a.used);
