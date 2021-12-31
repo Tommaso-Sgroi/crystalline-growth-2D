@@ -16,7 +16,7 @@ void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, stru
        
         for(int k=0; k<iterazioni; k++){
 
-                for(size_t i=0; i<particles->used; i++){
+                for(size_t i=particles->used-1; i>0; i--){
                         if(check_crystal_neighbor(&space, particles->array[i])){
                                 insertArray(&precrystalize, particles->array[i]);
                                 removeAt(&particles, i);

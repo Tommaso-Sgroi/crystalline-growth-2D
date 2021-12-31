@@ -79,8 +79,24 @@ void removeElement(arraylist* a, particle* element){
 void removeAt(arraylist* a, size_t where){
   if(where < 0 || where >= a->used) return 0; //controlla se la posizione è valida
 
-   a->array[where] = a->array[0]; //fai uno switch dell'ultimo elemento con quello corrente
-   a->array++;
+  a->array[where] = a->array[a->used-1]; //fai uno switch dell'ultimo elemento con quello corrente
+  //a->array[a->used-1] = 0; //metti a 0 l'ultimo elemento recentemente puntato
+  a->used--; //decrementa used
+}
+
+void build_vector_particle(arraylist* particles, int numero_particelle, size_t len_x, size_t len_y, int posizione_seed_x, int posizione_seed_y)
+{
+        for (int i=0; i<numero_particelle; i++){
+                particle* info;
+                do
+                {
+                        info->x=rand()%len_x;
+                        info->y=rand()%len_y;
+                }while(info->x==posizione_seed_x && info->y==posizione_seed_y);
+                insertArray(&particles, &info);
+        }
+        
+
 }
 
 
