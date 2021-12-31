@@ -46,13 +46,28 @@ void build_field(struct space* space)
 };
 
 
-void init_field(struct space* space, const size_t len_x, const size_t len_y, const size_t posizione_seed_x, const size_t posizione_seed_y/*, const size_t numero_partishorte*/){ 
-        for(size_t x = 0; x < len_x; x++){
-                for(size_t y = 0; y < len_y; y++){
+void init_field(struct space* space, const size_t posizione_seed_x, const size_t posizione_seed_y/*, const size_t numero_partishorte*/){ 
+       /* for(size_t x = 0; x < space->len_x; x++){
+                for(size_t y = 0; y < space->len_y; y++){
                         space->field[x][y] = -1; // inizializzo la shorta
                 }
-        }
+        }*/
         space->field[posizione_seed_x][posizione_seed_y] = 1;                       
+
+}
+
+void build_vector_particle(arraylist* particles, int numero_particelle, size_t len_x, size_t len_y, int posizione_seed_x, int posizione_seed_y)
+{
+        for (int i=0; i<numero_particelle; i++){
+                particle info;
+                do
+                {
+                        info.x=rand()%len_x;
+                        info.y=rand()%len_y;
+                }while(info.x==posizione_seed_x && info.y==posizione_seed_y);
+                insertArray(particles, &info);
+        }
+        
 
 }
 

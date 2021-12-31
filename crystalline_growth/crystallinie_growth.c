@@ -8,85 +8,46 @@
 // static size_t len_x, len_y;
 
 
+//struct space space;
 
-arraylist particles, precrystallized_particles;
+//arraylist particles, precrystallized_particles;
 
-void move_and_precrystalize(){
+void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, struct space* space, int iterazioni){
+       
+        for(int k=0; k<iterazioni; k++){
 
-        // for(size_t i = 0; i < particles_movement.used; i++){
-                
-        //         cell* cella = particles_movement.array[i];
+                for(size_t i=0; i<particles->used; i++){
+                        if(check_crystal_neighbor(&space, particles->array[i])){
+                                insertArray(&precrystalize, particles->array[i]);
+                                removeAt(&particles, i);
+                                printf("Trovato cristallo vicino!\n");
+                        }
+                        else{
+                                size_t x_movement;
+                                size_t y_movement;
 
-        //         print_cell(cella);
-        //         printf("\n");
+                                printf("Muovo particella n");
+                                do{
+                                        x_movement = particles->array[i]->x + (rand()%2 * (rand()%2? 1: -1)); // pick random x direction
+                                        y_movement = particles->array[i]->y + (rand()%2 * (rand()%2? 1: -1)); // pick random y direction
+                                }while(!is_in_bounds(x_movement, y_movement, space->len_x, space->len_y)); // finché non sceglie una direzione corretta continua a scegliere randomicamente
 
-        //         if(check_crystal_neighbor(cella)){ // se si trova vicino a un cristallo vai in precristallizzazione
-        //                 cella->status = 0;
-        //                 removeElement(&particles_movement, cella);
-        //                 insertArray(&precrystalized_particles, cella);
+                                particles->array[i]->x = x_movement;
+                                particles->array[i]->y = y_movement;
 
-        //                 printf("Trovato cristallo vicino!\n");
-        //                 print_cell(cella);
-        //                 printf("\n");
-        //         }
-        //         else{ // altrimenti muovi
-                
-        //         printf("Muovo le particelle:\n");
-        //         while((cella->particles /*+ 1*/) > 0)
-        //         {
-        //                 printf("\tMuovo particella n° %zu\n", cella->particles);
-        //                 print_cell(cella);
-        //                 printf("\n");
+                        }
 
-        //                 short x_movement, y_movement;
-        //                 do{
-        //                         x_movement = cella->x + (rand()%2 * (rand()%2? 1: -1)); // pick random x direction
-        //                         y_movement = cella->y + (rand()%2 * (rand()%2? 1: -1)); // pick random y direction
-        //                 }while(!is_in_bounds(x_movement, y_movement)); // finché non sceglie una direzione corretta continua a scegliere randomicamente
+                }
 
-        //                 // field[cella->x][cella->y].particles--;
-        //                 cella->x = x_movement; // NON VA BENE
-        //                 cella->y = y_movement;
+                for(size_t i=0; i<precrystalize->used; i++){
+                        space->field[precrystalize->array[i]->x][precrystalize->array[i]->y]=1;
+                }
+                if(precrystalize->used>0)
+                {
+                        trim_list(&precrystalize);
 
-        //                 printf("\tScelta casella di movimento: (%zu, %zu)\n", cella->x, cella->y);
-        //                 cella->particles-=1;
-        //                 printf("Decremento particelle, rimanenti: %zu", cella->particles);
-
-        //                 cell* cell_moved_in = &field[x_movement][y_movement];
-        //                 cell_moved_in->particles_moved_in++;
-
-        //                 printf("Mosso la cella nella nuova cella: \n");
-        //                 print_cell(cell_moved_in);
-        //                 printf("\n");
-
-        //                 if(cell_moved_in->status == 0){ // se va in una cella in fase di precristallizzazione
-        //                         printf("La cella si trovava in stato 0, aggiorno lo stato:\n");
-        //                         cell_moved_in->particles += cell_moved_in->particles_moved_in;
-        //                         cell_moved_in->particles_moved_in = 0;
-        //                         print_cell(cell_moved_in);
-        //                         printf("\n");
-        //                 }
-        //                 else if(check_crystal_neighbor(cella)){ // se si trova vicino a un cristallo vai in precristallizzazione
-
-        //                         printf("E' stato rilevato un cristallo vicino,\naggiorno lo stato della cella portandolo in precristallizzazione:\n");
-        //                         cell_moved_in->status = 0;
-        //                         cell_moved_in->particles += cell_moved_in->particles_moved_in;
-        //                         cell_moved_in->particles_moved_in = 0;
-
-        //                         print_cell(cell_moved_in);
-        //                         printf("\n");
-
-        //                         removeElement(&particles_movement, cella); // non va bene
-        //                         insertArray(&precrystalized_particles, cella); // non va bene
-        //                 }
-        //                 else{ // se si trova un una casella normale
-        //                      // aggiunge la cella in cui si è mosso nella lista delle celle in cui ci sono particelle da muovere
-        //                      // nel caso il numero di particelle sia 0
-        //                      // aggiorno il numero di particelle spostando le particles_moved_in in particles
-        //                 }
-        //         }
-        //     }
-        // }
+                }
+        }
 
 }
 
@@ -104,16 +65,23 @@ int start_crystalline_growth(const size_t x, const size_t y, const size_t iteraz
         
         //inizializzo la lista delle particelle
         initArray(&particles, numero_particelle + 1);
-        initArray(&precrystallized_particles, numero_particelle / 4);
+        initArray(&precrystallized_particles, 10);
         
         
-        //costruisco il campo e lo inizializzo
+        //costruisco il campo 
         //space.field = build_field(x, y);
         build_field(&space);
-        init_field(&space, x, y, posizione_seed_x, posizione_seed_y);
-        
+        //inizializzo campo
+        init_field(&space, posizione_seed_x, posizione_seed_y);
+        //printo matrice iniziale (solo seed)
         print_field(&space);
-        move_and_precrystalize();
+        
+        //costruisco vettore delle particelle in movimento (random)
+        build_vector_particle(&particles, numero_particelle, space.len_x, space.len_y, posizione_seed_x, posizione_seed_y);
+
+        //muovo e precristallizzo 
+        move_and_precrystalize(&particles, &precrystallized_particles, &space, iterazioni);
+        //printo matrice cristalli
         printf("\n\n");
         print_field(&space);
 

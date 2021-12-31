@@ -75,6 +75,15 @@ void removeElement(arraylist* a, particle* element){
   }
 }
 
+//rimuove l'elemento a una posizione specifica scambiando con il primo elemento e cambiando il puntatore 
+void removeAt(arraylist* a, size_t where){
+  if(where < 0 || where >= a->used) return 0; //controlla se la posizione è valida
+
+   a->array[where] = a->array[0]; //fai uno switch dell'ultimo elemento con quello corrente
+   a->array++;
+}
+
+
 void print_array(arraylist* a){
   for(size_t i = 0; i < a->used; i++){
     printf("Coordinates: (%zu, %zu)\n", a->array[i]->x, a->array[i]->y);
