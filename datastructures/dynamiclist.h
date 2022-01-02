@@ -92,7 +92,7 @@ void removeAt(arraylist* a, size_t where){
 
 void print_array(arraylist* a){
   for(size_t i = 0; i < a->used; i++){
-    printf("Coordinates: (%zu, %zu)\n", a->array[i]->x, a->array[i]->y);
+    printf("Coordinates: (%i, %i)\n", a->array[i]->x, a->array[i]->y);
     // printf("%i\n", a->array[i]);
   }
 }

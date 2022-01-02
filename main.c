@@ -2,16 +2,16 @@
 
 
 
-size_t string_to_size_t(const char*);
+int string_to_int(const char*);
 
 int main(int argc, const char* argv[]) {
 
-    size_t x = string_to_size_t(argv[1]);
-    size_t y = string_to_size_t(argv[2]);
-    size_t iterazioni = string_to_size_t(argv[3]);
-    size_t numero_particelle = string_to_size_t(argv[4]);
-    size_t posizione_seed_x = string_to_size_t(argv[5]);
-    size_t posizione_seed_y = string_to_size_t(argv[6]);
+    int x = string_to_int(argv[1]);
+    int y = string_to_int(argv[2]);
+    int iterazioni = string_to_int(argv[3]);
+    int numero_particelle = string_to_int(argv[4]);
+    int posizione_seed_x = string_to_int(argv[5]);
+    int posizione_seed_y = string_to_int(argv[6]);
 
     // arraylist a;
     // initArray(&a, 10);
@@ -27,9 +27,9 @@ int main(int argc, const char* argv[]) {
 }
 
 
-size_t string_to_size_t(const char* c){
-    size_t len = 0;
-    if (1 == sscanf(c, "%zu", &len)){
+int string_to_int(const char* c){
+    int len = 0;
+    if (1 == sscanf(c, "%i", &len)){
         return len;
     }
     return -1;
