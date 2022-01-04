@@ -21,7 +21,7 @@ int main(int argc, const char* argv[]) {
     // insertArray(&a, 3);
     // insertArray(&a, 4);
     // insertArray(&a, 5);
-
+ 
 
     return start_crystalline_growth(x, y, iterazioni, numero_particelle, posizione_seed_x, posizione_seed_y);
 }

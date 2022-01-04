@@ -3,7 +3,7 @@
 /*struttura arraylist contiene un vettore di unsigned long che rappresentano il valore numerico della locazione in memoria dell'oggetto
 oppure di contenere un valore numerico positivo (come il client fd)*/
 typedef struct {
-  particle **array; //vettore di unsigned long
+  particle *array; //vettore di unsigned long
   size_t used; //lunghezza usata
   size_t size; //lunghezza dell'array totale
 
@@ -13,7 +13,7 @@ typedef struct {
 la mutex non è inizializzata perché potrebbe non servire sempre, bisogna inizializzarla
 solo di volontà propria*/
 void initArray(arraylist *a, size_t initialSize) {
-  a->array = calloc(initialSize, sizeof(particle*)); //alloca il vettore
+  a->array = calloc(initialSize, sizeof(particle)); //alloca il vettore
   a->used = 0; //setta a 0 l'utilizzo della lista
   a->size = initialSize; //inserisce il contatore all'inizial size della lista
 }
@@ -22,9 +22,9 @@ void initArray(arraylist *a, size_t initialSize) {
 void insertArray(arraylist *a, particle* element) {
   if(a->used == a->size) { //se gli usati sono uguali agli utilizzati allora bisogna riallocare l'array
     a->size *= 2; //la nuova size è uguale al doppio della vecchia
-    a->array = realloc(a->array, a->size * sizeof(particle*));//realloca l'array
+    a->array = realloc(a->array, a->size * sizeof(particle));//realloca l'array
   }
-  a->array[a->used++] = element; //inserisce l'elemento all'untima posizione e la incrementa
+  a->array[a->used++] = *element; //inserisce l'elemento all'untima posizione e la incrementa
 }
 
 /*inserisce l'elemento a una posizione specifica facendo swappare di una posizione in avanti gli altri elementi*/
@@ -33,13 +33,13 @@ int insertAt(arraylist* a, size_t where, particle* element){
 
   if(a->used == a->size) { //incrementa la size se è finita (vedere sopra)
     a->size *= 2;
-    a->array = realloc(a->array, a->size * sizeof(particle*));
+    a->array = realloc(a->array, a->size * sizeof(particle));
   }
 
   for(size_t i = a->used; i >= where && i > 0; i--)
     a->array[i] = a->array[i-1]; //mette una posizione avanti tutti gli elementi che si trovano dopo where
 
-  a->array[where] = element; //mette alla posizione indicata l'elemento
+  a->array[where] = *element; //mette alla posizione indicata l'elemento
   a->used++; //incrementa gli usati
 
   return 1; //ritorna 1 su successo
@@ -62,29 +62,13 @@ void trim_list(arraylist* a){
 void switch_last(arraylist* a, size_t i){
   a->array[i] = a->array[a->used-1];
 }
-/*rimuove l'elemento dall'arraylist facendo retrocedere tutti gli altri elementi*/
-void removeElement(arraylist* a, particle* element){
-  short flag = 0; //flag di status per indicare se è stato rimosso l'elemento
-  for(size_t i = 0; i < a->used; i++){ //itera sull'array
-
-   if(element == a->array[i]){ //altrimenti se l'elemento è == a quello nella posizione i dell'array allora esegui le azioni
-      switch_last(a, i); //fai uno switch dell'ultimo elemento con quello corrente
-      flag++; // incrementa la flag di status per indicare che è avvenuto il cambiamento
-    }
-  }
-  if(flag) //se è stato rimosso allora
-  {
-    a->array[a->used-1] = 0; //metti a 0 l'ultimo elemento recentemente puntato
-    a->used--; //decrementa used
-  }
-}
 
 //rimuove l'elemento a una posizione specifica scambiando con il primo elemento e cambiando il puntatore 
 void removeAt(arraylist* a, size_t where){
   if(where < 0 || where >= a->used) return; //controlla se la posizione è valida
 
    switch_last(a, where); //fai uno switch dell'ultimo elemento con quello corrente
-   a->array[a->used-1] = 0; //metti a 0 l'ultimo elemento recentemente puntato
+   // a->array[a->used-1] = NULL; //metti a 0 l'ultimo elemento recentemente puntato
    a->used--; //decrementa used
    // a->array++; // ???
 }
@@ -92,7 +76,7 @@ void removeAt(arraylist* a, size_t where){
 
 void print_array(arraylist* a){
   for(size_t i = 0; i < a->used; i++){
-    printf("Coordinates: (%i, %i)\n", a->array[i]->x, a->array[i]->y);
+    printf("Coordinates: (%i, %i)\n", a->array[i].x, a->array[i].y);
     // printf("%i\n", a->array[i]);
   }
 }

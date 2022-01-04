@@ -9,9 +9,6 @@ typedef struct {
 }particle;
 
 /*Alloca nell'heap una nuova particella*/
-particle* new_particle(){
-        return malloc(sizeof(particle));
-}
 
 void print_particle(particle* p){
         printf("Paticle at: (%i, %i)\n", p->x, p->y);
@@ -98,17 +95,12 @@ void print_field(struct space* space){
     struct space s = *space;
     for(int i = 0; i < s.len_x; i++){
         for(int j = 0; j < s.len_y; j++){
-        char* c;
-        if(s.field[i][j] == -1){
-                c = " P";
-        }
-        if(s.field[i][j] == 0){
-                c = "PC";
-        }
-        if(s.field[i][j] == 1){
-                c = " C";
-        }
-        printf("%s%i ", c, s.field[i][j]);
+                if(s.field[i][j] == -1){
+                        printf("0 ");
+                }
+                if(s.field[i][j] == 1){
+                        printf("C ");
+                }
         }
         printf("\n");
     }

@@ -11,7 +11,6 @@
 //struct space space;
 
 //arraylist particles, precrystallized_particles;
-
 void print_grid(struct space* s, arraylist* p){
         int grid [s->len_x][s->len_y];
 
@@ -22,7 +21,7 @@ void print_grid(struct space* s, arraylist* p){
         }
 
         for(int i = 0; i < p->used; i++){
-            grid[p->array[i]->x][p->array[i]->y] = -2;
+            grid[p->array[i].x][p->array[i].y] = -2;
         }
         
 
@@ -50,11 +49,11 @@ void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, stru
     for(int k = 0; k < iterazioni; k++){
         if(particles->used > 0){
             for(int i = particles->used - 1 ;; i--){
-                particle* p = particles->array[i];
+                particle p = particles->array[i];
                 // print_particle(p);
                 
-                if(check_crystal_neighbor(space,  p)){
-                    insertArray(precrystalize,  p);
+                if(check_crystal_neighbor(space,  &p)){
+                    insertArray(precrystalize,  &p);
                     removeAt(particles, i);
                     //printf("Trovato cristallo vicino!\n");
                 }
@@ -74,12 +73,12 @@ void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, stru
                         
                         //printf("Choosed: %i, %i\n", x, y);
 
-                        x_movement =  p->x + x; // pick random x direction
-                        y_movement =  p->y + y; // pick random y direction
+                        x_movement =  p.x + x; // pick random x direction
+                        y_movement =  p.y + y; // pick random y direction
                     }while(!is_in_bounds(x_movement, y_movement, space->len_x, space->len_y)); // finché non sceglie una direzione corretta continua a scegliere randomicamente
                                                                                                 // sostituibile con (!_movement | y_movement)
-                     p->x = x_movement;
-                     p->y = y_movement;
+                     p.x = x_movement;
+                     p.y = y_movement;
 
                      //printf("Si muove in (%i, %i)\n", p->x, p->y);
 
@@ -95,8 +94,7 @@ void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, stru
             // cristallizza
             for(int i = 0; i < precrystalize->used; i++){
                 // printf("%i, %i\n", i, precrystalize->used);
-                space->field[precrystalize->array[i]->x][precrystalize->array[i]->y] = 1;
-                free(precrystalize->array[i]);
+                space->field[precrystalize->array[i].x][precrystalize->array[i].y] = 1;
             }
             
             if(precrystalize->used > 0){
@@ -118,13 +116,13 @@ void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, stru
 
 void build_vector_particle(arraylist* particles, int numero_particelle, int len_x, int len_y, int posizione_seed_x, int posizione_seed_y){
     for (int i=0; i<numero_particelle; i++){
-        particle* info = new_particle();
+        particle info;
         do
         {
-            info->x = rand() % len_x;
-            info->y = rand() % len_y;
-        }while(info->x == posizione_seed_x && info->y == posizione_seed_y);
-        insertArray(particles, info);
+            info.x = rand() % len_x;
+            info.y = rand() % len_y;
+        }while(info.x == posizione_seed_x && info.y == posizione_seed_y);
+        insertArray(particles, &info);
     }
 
 }
@@ -164,7 +162,7 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
     move_and_precrystalize(&particles, &precrystallized_particles, &space, iterazioni);
     //printo matrice cristalli
     // printf("\n\n");
-    // print_field(&space);
+    print_field(&space);
 
 
     // for(int x = 0; x < 50; x++){
