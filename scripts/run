@@ -1,4 +1,4 @@
-./out/main.o 10000 10000 10000 100000 1000 5000
+./out/main.o 5 5 100 16 2 2
 #    int x = string_to_int(argv[1]);
 #    int y = string_to_int(argv[2]);
 #    int iterazioni = string_to_int(argv[3]);
