@@ -1,5 +1,4 @@
-#include "../datastructures/dynamiclist.h"
-
+#include "utility.h"
 
 
 
@@ -129,7 +128,7 @@ void build_vector_particle(arraylist* particles, int numero_particelle, int len_
 
 
 int start_crystalline_growth(const int x, const int y, const int iterazioni, const int numero_particelle,
-           const int posizione_seed_x, const int posizione_seed_y){
+           const int posizione_seed_x, const int posizione_seed_y, int write_out){
 
     struct space space;
     space.len_x=x;
@@ -162,7 +161,6 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
     move_and_precrystalize(&particles, &precrystallized_particles, &space, iterazioni);
     //printo matrice cristalli
     // printf("\n\n");
-    print_field(&space);
 
 
     // for(int x = 0; x < 50; x++){
@@ -185,5 +183,5 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
 
 
 
-    return 0;
+    return write_out == 1? write_output(&space): 0;
 }

@@ -1,4 +1,3 @@
-#include "../crystalline_growth/utility.h"
 
 #include <stdio.h>
 #include <stdbool.h>

@@ -12,10 +12,12 @@ int main(int argc, const char* argv[]) {
     int numero_particelle = string_to_int(argv[4]);
     int posizione_seed_x = string_to_int(argv[5]);
     int posizione_seed_y = string_to_int(argv[6]);
+    int write_out = string_to_int(argv[7]);
+
 
     // arraylist a;
     // initArray(&a, 10);
-
+ 
     // insertArray(&a, 1);
     // insertArray(&a, 2);
     // insertArray(&a, 3);
@@ -23,7 +25,7 @@ int main(int argc, const char* argv[]) {
     // insertArray(&a, 5);
  
 
-    return start_crystalline_growth(x, y, iterazioni, numero_particelle, posizione_seed_x, posizione_seed_y);
+    return start_crystalline_growth(x, y, iterazioni, numero_particelle, posizione_seed_x, posizione_seed_y, write_out);
 }
 
 
