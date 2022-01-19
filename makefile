@@ -1,13 +1,12 @@
-CC=gcc
-CFLAGS=-Wall
+CC=nvcc
 COUT=-o
 CDEBUGFLAG=-g
 
-main: main.c
-	$(CC) $(CFLAGS) $(COUT) out/main.o main.c
+main: main.cu
+	$(CC) $(COUT) out/main.o main.cu
 
-main_debug: main.c
-	$(CC) $(CDEBUGFLAG) $(CFLAGS) $(COUT) out/debug/main.db main.c
+main_debug: main.cu
+	$(CC) $(CDEBUGFLAG) $(COUT) out/debug/main.db main.cu
 
 .PHONY: clean
 clean:

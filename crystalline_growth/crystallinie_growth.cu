@@ -2,6 +2,15 @@
 
 
 
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+
+inline void gpuAssert(cudaError_t code, char *file, int line, bool abort = true)
+{
+    if (code != cudaSuccess) {
+        fprintf(stderr, "GPUassert: %s %s %dn", cudaGetErrorString(code), file, line);
+    }
+}
+
 // arraylist particles_movement, precrystalized_particles;
 
 // static int len_x, len_y;
@@ -113,15 +122,37 @@ void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, stru
 }
 
 
-void build_vector_particle(arraylist* particles, int numero_particelle, int len_x, int len_y, int posizione_seed_x, int posizione_seed_y){
-    for (int i=0; i<numero_particelle; i++){
+__global__ void build_vector_particle(particle* particles, int numero_particelle, int len_x, int len_y, int posizione_seed_x, int posizione_seed_y){
+    int gloID = blockIdx.x * blockDim.x + threadIdx.x;
+    int GridSize = gridDim.x * blockDim.x;
+    for(int i = gloID; i < numero_particelle; i += GridSize){
         particle info;
         do
         {
-            info.x = rand() % len_x;
-            info.y = rand() % len_y;
+            info.x = rand_lfsr113_Bits(gloID + GridSize) % len_x;
+            info.y = rand_lfsr113_Bits(gloID + GridSize) % len_y;
         }while(info.x == posizione_seed_x && info.y == posizione_seed_y);
-        insertArray(particles, &info);
+        particles[i] = info;
+    }
+
+}
+
+__global__ void print_vet_particle(particle* particles, int numero_particelle) {
+    int gloID = blockIdx.x * blockDim.x + threadIdx.x;
+    int GridSize = gridDim.x * blockDim.x;
+    for(int i = gloID; i < numero_particelle; i += GridSize){
+        print_particle(&particles[i]);
+    }
+}
+
+
+__global__ void print_field_device(int* device_matrix, int len_x, int len_y){
+
+    for(int _x = 0; _x < len_x; _x++){
+        for(int _y = 0; _y < len_y; _y++){
+            printf("%i ", device_matrix[_x * len_y + _y]);
+        }
+        printf("\n");
     }
 
 }
@@ -129,59 +160,61 @@ void build_vector_particle(arraylist* particles, int numero_particelle, int len_
 
 int start_crystalline_growth(const int x, const int y, const int iterazioni, const int numero_particelle,
            const int posizione_seed_x, const int posizione_seed_y, int write_out){
-
+//----------------------------------------------------------------------------------------------
     struct space space;
     space.len_x=x;
     space.len_y=y;
 
-    arraylist particles, precrystallized_particles;
+    //arraylist particles, precrystallized_particles;
 
     // printf("x: %i\ny: %i\nIterazioni: %i\nNumero particelle: %i\nPosizione seed: (%i, %i)\n",
     //     x,      y,      iterazioni,      numero_particelle,      posizione_seed_x, posizione_seed_y);
 
     //inizializzo la lista delle particelle
-    initArray(&particles, numero_particelle + 1);
-    initArray(&precrystallized_particles, 10);
-
 
     //costruisco il campo
-    //space.field = build_field(x, y);
     build_field(&space);
-    //inizializzo campo
     init_field(&space, posizione_seed_x, posizione_seed_y);
-    //printo matrice iniziale (solo seed)
+
+    int numThread=256;
+    int* dev_matrix;
+    particle* dev_vet_particle;
+
     // print_field(&space);
-    // printf("\n\n");
-    //costruisco vettore delle particelle in movimento (random)
-    build_vector_particle(&particles, numero_particelle, space.len_x, space.len_y, posizione_seed_x, posizione_seed_y);
+    // printf("\n");
+    int buffer_field [x * y];
+    for(int _x = 0; _x < x; _x++){
+        for(int _y = 0; _y < y; _y++){
+                buffer_field[_x * y + _y] = space.field[_x][_y]; // inizializzo la inta
+                // printf("%i ", buffer_field[_x * y + _y]);
+        }
+        //printf("\n");
+    }
+
+
+    cudaMalloc((void**) &dev_matrix, x * y * sizeof(int));
+    cudaMemcpy(dev_matrix, buffer_field, x * y * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMalloc((void**) &dev_vet_particle, numero_particelle * sizeof(particle));
+    build_vector_particle<<<  (numero_particelle+numThread+1)/numThread, numThread  >>>(dev_vet_particle, numero_particelle, x, y, posizione_seed_x, posizione_seed_y);
+    //print_field_device<<<1,1>>>(dev_matrix, x, y);
+    //print_vet_particle<<<(numero_particelle+numThread+1)/numThread, numThread>>>(dev_vet_particle, numero_particelle);
+    //numero_particelle+numThread+1/numThread, numThread
+    //cudaMalloc((void**) &dev_matrix, x * y * sizeof(int));
+
+    //inizializzo campo
     
-    // print_grid(&space, &particles);
+    //costruisco vettore delle particelle in movimento (random)
+    //build_vector_particle(&particles, numero_particelle, space.len_x, space.len_y, posizione_seed_x, posizione_seed_y);
+    
+    ///fino qui CPU
+
+    /// da qui GPU
 
     //muovo e precristallizzo
-    move_and_precrystalize(&particles, &precrystallized_particles, &space, iterazioni);
-    //printo matrice cristalli
-    // printf("\n\n");
-
-
-    // for(int x = 0; x < 50; x++){
-    // int x_movement = rand()%2 * (rand()%2? 1: -1);
-    // int y_movement = rand()%2 * (rand()%2? 1: -1);
-    // printf("%i, %i\n", x_movement, y_movement);
-    // }
-    /*
-    ALGORITMO 3
-    Si divide l’algoritmo in 2 istanti di tempo:
-    movimento e precristallizzazione
-    cristallizzazione
-
-    Controlla se una particella ha un cristallo vicino
-    se sì precristallizza
-    altrimenti muovi
-    Cristallizza le particelle precristallizate
-
-    */
+    //move_and_precrystalize(&particles, &precrystallized_particles, &space, iterazioni);
 
 
 
+    cudaDeviceSynchronize();
     return write_out == 1? write_output(&space): 0;
 }

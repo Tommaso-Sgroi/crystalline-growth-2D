@@ -13,7 +13,7 @@ typedef struct {
 la mutex non è inizializzata perché potrebbe non servire sempre, bisogna inizializzarla
 solo di volontà propria*/
 void initArray(arraylist *a, size_t initialSize) {
-  a->array = calloc(initialSize, sizeof(particle)); //alloca il vettore
+  a->array = (particle*) calloc(initialSize, sizeof(particle)); //alloca il vettore
   a->used = 0; //setta a 0 l'utilizzo della lista
   a->size = initialSize; //inserisce il contatore all'inizial size della lista
 }
@@ -22,18 +22,18 @@ void initArray(arraylist *a, size_t initialSize) {
 void insertArray(arraylist *a, particle* element) {
   if(a->used == a->size) { //se gli usati sono uguali agli utilizzati allora bisogna riallocare l'array
     a->size *= 2; //la nuova size è uguale al doppio della vecchia
-    a->array = realloc(a->array, a->size * sizeof(particle));//realloca l'array
+    a->array = (particle*) realloc(a->array, a->size * sizeof(particle));//realloca l'array
   }
   a->array[a->used++] = *element; //inserisce l'elemento all'untima posizione e la incrementa
 }
 
 /*inserisce l'elemento a una posizione specifica facendo swappare di una posizione in avanti gli altri elementi*/
 int insertAt(arraylist* a, size_t where, particle* element){
-  if(where < 0 || where >= a->used) return 0; //controlla se la posizione è valida
+  //if(where < 0 || where >= a->used) return 0; //controlla se la posizione è valida
 
   if(a->used == a->size) { //incrementa la size se è finita (vedere sopra)
     a->size *= 2;
-    a->array = realloc(a->array, a->size * sizeof(particle));
+    a->array = (particle*) realloc(a->array, a->size * sizeof(particle));
   }
 
   for(size_t i = a->used; i >= where && i > 0; i--)
@@ -65,7 +65,7 @@ void switch_last(arraylist* a, size_t i){
 
 //rimuove l'elemento a una posizione specifica scambiando con il primo elemento e cambiando il puntatore 
 void removeAt(arraylist* a, size_t where){
-  if(where < 0 || where >= a->used) return; //controlla se la posizione è valida
+  //if(where < 0 || where >= a->used) return; //controlla se la posizione è valida
 
    switch_last(a, where); //fai uno switch dell'ultimo elemento con quello corrente
    // a->array[a->used-1] = NULL; //metti a 0 l'ultimo elemento recentemente puntato
