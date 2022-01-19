@@ -5,7 +5,7 @@
 #include <cuda_runtime.h>
 
 //_______________________________PARTICLE_______________________________________-
-typedef struct {
+typedef struct __align__(8) {
     int x, y;
 }particle;
 
@@ -68,12 +68,14 @@ void init_field(struct space* space, const int posizione_seed_x, const int posiz
 
 #define IS_IN_BOUNDS(x, y, len_x, len_y) (x >= 0 && x < len_x && y >= 0 && y < len_y) // poi voglio vedere se e cosa cambia utilizzando questa macro o la funzione
 
-bool is_in_bounds(const int x, const int y, const int len_x, const int len_y){
+__device__ bool is_in_bounds(const int x, const int y, const int len_x, const int len_y){
         return x >= 0 && x < len_x && y >= 0 && y < len_y;
 }
 
-bool check_crystal_neighbor(struct space* space, particle* p){
-        static int points []= {-1, -1, -1, 0, -1, 1, 0, -1, 0, 1, 1, -1, 1, 0, 1, 1};
+__device__ bool check_crystal_neighbor(int** space, particle* p, int len_x, int len_y){
+        int points []= {-1, -1, -1, 0, -1, 1, 0, -1, 0, 1, 1, -1, 1, 0, 1, 1};
+        
+        bool flag = false;
         for (int i = 0; i < 16; i++){
                 int dx = points[i];
                 int dy = points[++i];
@@ -81,12 +83,12 @@ bool check_crystal_neighbor(struct space* space, particle* p){
                 int new_x = p->x + dx;
                 int new_y = p->y + dy;
 
-                if(is_in_bounds(new_x, new_y, space->len_x, space->len_y) && 
-                        space->field[new_x][new_y] == 1){
-                        return true;
+                if(is_in_bounds(new_x, new_y, len_x, len_y) && 
+                        (*space)[new_x * len_y + new_y] == 1){
+                        flag = true;
                 }
         }
-        return false;
+        return flag;
 }
 
 

@@ -51,73 +51,41 @@ void print_grid(struct space* s, arraylist* p){
 }
 
 
+__global__ void move_and_precrystalize(particle* particles, int * dev_matrix, int len_x, int len_y, int iterazioni, int numero_particelle){
 
-void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, struct space* space, int iterazioni){
+    bool precrystal = false;
+    int gloID = blockIdx.x * blockDim.x + threadIdx.x;
+    int GridSize = gridDim.x * blockDim.x;
 
-    for(int k = 0; k < iterazioni; k++){
-        if(particles->used > 0){
-            for(int i = particles->used - 1 ;; i--){
-                particle p = particles->array[i];
-                // print_particle(p);
-                
-                if(check_crystal_neighbor(space,  &p)){
-                    insertArray(precrystalize,  &p);
-                    removeAt(particles, i);
-                    //printf("Trovato cristallo vicino!\n");
-                }
+    int rng_seed = gloID;
+    for(int i = gloID; i < numero_particelle; i += GridSize){
+        
+        particle p = particles[i];                                          //particella
+        
+        precrystal = check_crystal_neighbor(&dev_matrix, &p, len_x, len_y);
+        if(!precrystal){                                                    // if non è stato precristallizato nulla
 
-                else{
-                    int x_movement;
-                    int y_movement;
+            int x_movement;
+            int y_movement;
 
-                    // printf("Muovo particella n\n");
-                    do{
-                        int x = 0;
-                        int y = 0;
-                        while (((x == 0) && (y == 0))){
-                            x = (rand()%2 * (rand()%2? 1: -1));
-                            y = (rand()%2 * (rand()%2? 1: -1));
-                        }
-                        
-                        //printf("Choosed: %i, %i\n", x, y);
+            // printf("Muovo particella n\n");
+            int x = (rand_lfsr113_Bits(rng_seed)%2 * (rand_lfsr113_Bits(rng_seed)%2? 1: -1));
+            int y = (rand_lfsr113_Bits(rng_seed)%2 * (rand_lfsr113_Bits(rng_seed)%2? 1: -1));
+                //printf("Choosed: %i, %i\n", x, y);
 
-                        x_movement =  p.x + x; // pick random x direction
-                        y_movement =  p.y + y; // pick random y direction
-                    }while(!is_in_bounds(x_movement, y_movement, space->len_x, space->len_y)); // finché non sceglie una direzione corretta continua a scegliere randomicamente
-                                                                                                // sostituibile con (!_movement | y_movement)
-                     p.x = x_movement;
-                     p.y = y_movement;
-
-                     //printf("Si muove in (%i, %i)\n", p->x, p->y);
-
-                }
-                //printf("\n");
-                // lo scopo di questo if è puramente per uno scopo di limitazione dei numeri unsigned
-                // quando viene decrementato e si trova a 0 va al numero massimo che può rappresentare
-                // quindi questo controllo serve a evitare cose brutte
-                if(i == 0) {
-                    break; 
-                }
+            x_movement =  p.x + x; // pick random x direction
+            y_movement =  p.y + y; // pick random y direction
+            if(!is_in_bounds(x_movement, y_movement, len_x, len_y)){
+                x_movement = p.x;
+                y_movement = p.y;
             }
-            // cristallizza
-            for(int i = 0; i < precrystalize->used; i++){
-                // printf("%i, %i\n", i, precrystalize->used);
-                space->field[precrystalize->array[i].x][precrystalize->array[i].y] = 1;
-            }
-            
-            if(precrystalize->used > 0){
-                precrystalize->used = 0;
-            }
-
-            // print_grid(space, particles, precrystalize);
-            // print_grid(space, particles);
-
-            // printf("\n");
+            p.x = x_movement;
+            p.y = y_movement;
         }
-        else{
-            break;
+        __syncthreads();  // controllato se ha finito il blocco allora passa alla cristallizzazione
+        if(precrystal){
+            dev_matrix[p.x * len_y + p.y] = 1;
         }
-        // printf("\n");
     }
 }
 
@@ -129,8 +97,8 @@ __global__ void build_vector_particle(particle* particles, int numero_particelle
         particle info;
         do
         {
-            info.x = rand_lfsr113_Bits(gloID + GridSize) % len_x;
-            info.y = rand_lfsr113_Bits(gloID + GridSize) % len_y;
+            info.x = rand_lfsr113_Bits(gloID) % len_x;
+            info.y = rand_lfsr113_Bits(gloID) % len_y;
         }while(info.x == posizione_seed_x && info.y == posizione_seed_y);
         particles[i] = info;
     }
@@ -150,7 +118,7 @@ __global__ void print_field_device(int* device_matrix, int len_x, int len_y){
 
     for(int _x = 0; _x < len_x; _x++){
         for(int _y = 0; _y < len_y; _y++){
-            printf("%i ", device_matrix[_x * len_y + _y]);
+            printf("%s ", device_matrix[_x * len_y + _y] == 1? "C": "0");
         }
         printf("\n");
     }
@@ -178,7 +146,7 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
 
     int numThread=256;
     int* dev_matrix;
-    particle* dev_vet_particle;
+    particle* dev_vect_particle;
 
     // print_field(&space);
     // printf("\n");
@@ -190,29 +158,20 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
         }
         //printf("\n");
     }
-
-
+    int block = numThread;
+    int grid = (numero_particelle+block-1)/block;
     cudaMalloc((void**) &dev_matrix, x * y * sizeof(int));
     cudaMemcpy(dev_matrix, buffer_field, x * y * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMalloc((void**) &dev_vet_particle, numero_particelle * sizeof(particle));
-    build_vector_particle<<<  (numero_particelle+numThread+1)/numThread, numThread  >>>(dev_vet_particle, numero_particelle, x, y, posizione_seed_x, posizione_seed_y);
-    //print_field_device<<<1,1>>>(dev_matrix, x, y);
-    //print_vet_particle<<<(numero_particelle+numThread+1)/numThread, numThread>>>(dev_vet_particle, numero_particelle);
-    //numero_particelle+numThread+1/numThread, numThread
-    //cudaMalloc((void**) &dev_matrix, x * y * sizeof(int));
-
-    //inizializzo campo
-    
-    //costruisco vettore delle particelle in movimento (random)
-    //build_vector_particle(&particles, numero_particelle, space.len_x, space.len_y, posizione_seed_x, posizione_seed_y);
-    
-    ///fino qui CPU
-
-    /// da qui GPU
-
-    //muovo e precristallizzo
-    //move_and_precrystalize(&particles, &precrystallized_particles, &space, iterazioni);
-
+    cudaMalloc((void**) &dev_vect_particle, numero_particelle * sizeof(particle));
+    build_vector_particle<<< grid, block  >>>(dev_vect_particle, numero_particelle, x, y, posizione_seed_x, posizione_seed_y);
+    print_field_device<<<1,1>>>(dev_matrix, x, y);
+    print_vet_particle<<<(numero_particelle+numThread-1)/numThread, numThread>>>(dev_vect_particle, numero_particelle);
+    for(int i = 0; i < iterazioni; i++){
+        move_and_precrystalize<<<grid, block>>>(dev_vect_particle, dev_matrix, x, y, iterazioni, numero_particelle);
+        cudaDeviceSynchronize();
+    }
+    print_field_device<<<1,1>>>(dev_matrix, x, y);
+    //cudaMemcpy(dev_matrix, buffer_field, x * y * sizeof(int), cudaMemcpyHostToDevice);
 
 
     cudaDeviceSynchronize();

@@ -41,5 +41,5 @@ __device__ unsigned int rand_lfsr113_Bits (int seed)
    z3 = ((z3 & 4294967280U) << 7) ^ b;
    b  = ((z4 << 3) ^ z4) >> 12;
    z4 = ((z4 & 4294967168U) << 13) ^ b;
-   return (z1 ^ z2 ^ z3 ^ z4) + seed;
+   return (z1 ^ z2 ^ z3 ^ z4) * seed;
 }
