@@ -157,13 +157,13 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, int
 
 
     int grid = (numero_particelle + NUM_THREAD - 1)/NUM_THREAD;
-    cudaMalloc((void**) &dev_matrix, x * y * sizeof(int));
-    cudaMalloc((void**) &dev_vect_particle, numero_particelle * sizeof(particle));
-    cudaMallocManaged(&crystallized_particles_n, sizeof(int));
+    CHECK(cudaMalloc((void**) &dev_matrix, x * y * sizeof(int)));
+    CHECK(cudaMalloc((void**) &dev_vect_particle, numero_particelle * sizeof(particle)));
+    CHECK(cudaMallocManaged(&crystallized_particles_n, sizeof(int)));
 
 
-    cudaMemcpy(dev_matrix, buffer_field, x * y * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemset(crystallized_particles_n, 0, 1);
+    CHECK(cudaMemcpy(dev_matrix, buffer_field, x * y * sizeof(int), cudaMemcpyHostToDevice));
+    CHECK(cudaMemset(crystallized_particles_n, 0, 1));
  
 
 
@@ -171,34 +171,35 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, int
     print_field_device<<<1,1>>>(dev_matrix, x, y);
     
     print_vet_particle<<<(numero_particelle+NUM_THREAD-1)/NUM_THREAD, NUM_THREAD>>>(dev_vect_particle, numero_particelle);
-    cudaDeviceSynchronize();
+    CHECK(cudaDeviceSynchronize());
 
     for(int i = 0; i < iterazioni && numero_particelle > 0; i++){
         move_and_precrystalize<<<(numero_particelle+NUM_THREAD-1)/NUM_THREAD, NUM_THREAD>>>(dev_vect_particle, dev_matrix, x, y, iterazioni, numero_particelle, crystallized_particles_n);
-        cudaDeviceSynchronize();
+        CHECK(cudaDeviceSynchronize());
+        
        
         printf("Numero particelle %i -> ", numero_particelle);
                
         numero_particelle -= *crystallized_particles_n; //aggiornamento delle particelle
         crystallized_particles_n[0] = 0;
         sort_particles<<<(numero_particelle + NUM_THREAD - 1)/ NUM_THREAD, NUM_THREAD>>>(dev_vect_particle, numero_particelle);
-        cudaDeviceSynchronize();
-        
+        CHECK(cudaDeviceSynchronize());
+
         printf("numero particelle dopo aggiornamento %i\n", numero_particelle);
        
     }
     print_field_device<<<1,1>>>(dev_matrix, x, y);
 
 
-    cudaDeviceSynchronize();
+    CHECK(cudaDeviceSynchronize());
     if(write_out == 1){
         int space_monodimention[x * y];
-        cudaMemcpy(space_monodimention, dev_matrix, x * y * sizeof(int), cudaMemcpyDeviceToHost);
+        CHECK(cudaMemcpy(space_monodimention, dev_matrix, x * y * sizeof(int), cudaMemcpyDeviceToHost));
         transfer_output(&space, space_monodimention);
     }
 
-    cudaFree(&crystallized_particles_n);
-    cudaFree(&dev_matrix);
-    cudaFree(&dev_vect_particle);
+    CHECK(cudaFree(crystallized_particles_n));
+    CHECK(cudaFree(dev_matrix));
+    CHECK(cudaFree(dev_vect_particle));
     return write_out == 1? write_output(&space): 0;
 }
