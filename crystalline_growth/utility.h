@@ -10,7 +10,7 @@
                     })
 
 
-int write_output(struct space* s){
+__host__ int write_output(struct space* s){
     FILE *f = fopen("output.space", "w");
     if (f == NULL){
         printf("Error opening file!\n");
@@ -20,13 +20,22 @@ int write_output(struct space* s){
 
     for(int x = 0; x < s->len_x; x++){
         for(int y = 0; y < s->len_y; y++){
-            fprintf(f, "%s", s->field[x][y] == 1? "C": "0");
+            fprintf(f, "%s ", s->field[x][y] == 1? "C": "0");
         }
         fprintf(f, "%s", "\n");
     }
     fclose(f);
 
     return 0;
+}
+
+__host__ void transfer_output(space* s, int* output_field){
+
+    for(int x = 0; x < s->len_x; x++){
+        for(int y = 0; y < s->len_y; y++){
+            s->field[x][y] = output_field[x * s->len_y + y];
+        }
+    }
 }
 
 __device__ unsigned int rand_lfsr113_Bits (int seed)
@@ -42,4 +51,15 @@ __device__ unsigned int rand_lfsr113_Bits (int seed)
    b  = ((z4 << 3) ^ z4) >> 12;
    z4 = ((z4 & 4294967168U) << 13) ^ b;
    return (z1 ^ z2 ^ z3 ^ z4) * seed;
+}
+
+__device__ int position;
+__global__ void sort_particles(particle* particles, int size){
+    int gloID = blockIdx.x * blockDim.x + threadIdx.x;
+    if(gloID >= size || particles[gloID].x < 0) return; //esce se il thread non ha particelle o non ha una particella valida
+    
+    position = 0;
+    int pos = atomicAdd(&position, 1);
+    particles[pos] = particles[gloID];
+
 }
