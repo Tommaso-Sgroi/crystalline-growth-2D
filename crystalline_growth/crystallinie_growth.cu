@@ -29,7 +29,7 @@ void print_grid(struct space* s, arraylist* p){
             if(grid[i][j] == 1){
                 printf("C ");
             }
-            }
+        }
         printf("\n");
     }
 }
@@ -48,7 +48,7 @@ __global__ void move_and_precrystalize(particle* particles, int * dev_matrix, in
     __shared__ int crystallized[1];
     crystallized[0] = 0;
 
-    int rng_seed = gloID;
+    int rng_seed = gloID + 7;
     //for(int i = gloID; i < numero_particelle; i += GridSize){
     int i = gloID;
     //printf("GLOBAL_ID: %i\n", gloID);
@@ -63,8 +63,8 @@ __global__ void move_and_precrystalize(particle* particles, int * dev_matrix, in
             int y_movement;
 
             printf("Muovo particella %i, %i\n", p.x, p.y);
-            int x = (rand_lfsr113_Bits(rng_seed)%2 * (rand_lfsr113_Bits(rng_seed)%2? 1: -1));
-            int y = (rand_lfsr113_Bits(rng_seed)%2 * (rand_lfsr113_Bits(rng_seed)%2? 1: -1));
+            int x = (lcg64_temper(&rng_seed)%2 * (lcg64_temper(&rng_seed)%2? 1: -1));
+            int y = (lcg64_temper(&rng_seed)%2 * (lcg64_temper(&rng_seed)%2? 1: -1));
             printf("Choosed: %i, %i\n", x, y);
 
             x_movement =  p.x + x; // pick random x direction
@@ -99,12 +99,13 @@ __global__ void move_and_precrystalize(particle* particles, int * dev_matrix, in
 __global__ void build_vector_particle(particle* particles, int numero_particelle, int len_x, int len_y, int posizione_seed_x, int posizione_seed_y){
     int gloID = blockIdx.x * blockDim.x + threadIdx.x;
     int GridSize = gridDim.x * blockDim.x;
+    int seed = gloID + 7;
     for(int i = gloID; i < numero_particelle; i += GridSize){
         particle info;
         do
         {
-            info.x = rand_lfsr113_Bits(gloID) % len_x;
-            info.y = rand_lfsr113_Bits(gloID) % len_y;
+            info.x = lcg64_temper(&seed) % len_x;
+            info.y = lcg64_temper(&seed) % len_y;
         }while(info.x == posizione_seed_x && info.y == posizione_seed_y);
         particles[i] = info;
     }
