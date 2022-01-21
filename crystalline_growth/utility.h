@@ -58,8 +58,13 @@ __device__ int temper(int x)
 
 
 __device__ int lcg64_temper(int* seed){
-	*seed = 6364136223846793005ULL * *seed + 1;
-	return temper(*seed >> 16);
+    //printf("SEED_START: %i\n", *seed);
+
+	*seed = 6364136223846793005ULL * (*seed) + 1;
+    //printf("SEED_END: %i\n", *seed);
+
+    int out = temper(*seed >> 16);
+	return out;
 }
 
 __device__ int position;

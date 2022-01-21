@@ -5,6 +5,27 @@
 int string_to_int(const char*);
 void printDevProp(cudaDeviceProp devProp);
 
+int temperrrr(int x)
+{
+	x ^= x>>11;
+	x ^= x<<7 & 0x9D2C5680;
+	x ^= x<<15 & 0xEFC60000;
+	x ^= x>>18;
+	return x;
+}
+
+
+int lcg64_temperrrr(int* seed){
+    printf("SEED_START: %i\n", *seed);
+
+	*seed = 6364136223846793005ULL * (*seed) + 1;
+    printf("SEED_END: %i\n", *seed);
+
+    int out = temperrrr(*seed >> 16);
+	return out;
+}
+
+
 int main(int argc, const char* argv[]) {
 
     int x = string_to_int(argv[1]);
@@ -19,8 +40,9 @@ int main(int argc, const char* argv[]) {
     cudaGetDeviceProperties(&prop, 0);
 
     //printDevProp(prop);
-
+	int rng = 256;
     return start_crystalline_growth(x, y, iterazioni, numero_particelle, posizione_seed_x, posizione_seed_y, write_out);
+
 }
 
 
