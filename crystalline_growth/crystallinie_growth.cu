@@ -73,11 +73,13 @@ __global__ void move_and_precrystalize(particle* particles, int * dev_matrix, in
             p.x = x_movement;
             p.y = y_movement;
         }
+        else{
+            
+        }
         particles[gloID] = p;
         __syncthreads();  // controllato se ha finito il blocco allora passa alla cristallizzazione
         if(precrystal){
             //printf("Cristallizzo particella %i, %i\n", p.x, p.y);
-
             dev_matrix[p.x * len_y + p.y] = 1;
             atomicAdd(&crystallized[0], 1U);
             particles[gloID].x = -1;
@@ -162,16 +164,18 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, int
     CHECK(cudaMalloc((void**) &dev_vect_particle, numero_particelle * sizeof(particle)));
     CHECK(cudaMallocManaged(&crystallized_particles_n, sizeof(int)));
 
+    printf("Allocata memoria\n");
 
     CHECK(cudaMemcpy(dev_matrix, buffer_field, x * y * sizeof(int), cudaMemcpyHostToDevice));
     CHECK(cudaMemset(crystallized_particles_n, 0, 1));
+    printf("Inizializzata memoria\n");
  
 
-
     build_vector_particle<<< grid, NUM_THREAD  >>>(dev_vect_particle, numero_particelle, x, y, posizione_seed_x, posizione_seed_y);
-    print_field_device<<<1,1>>>(dev_matrix, x, y);
+    // print_field_device<<<1,1>>>(dev_matrix, x, y);
+    printf("Coatruito vettore particelle\n");
     
-    print_vet_particle<<<(numero_particelle + NUM_THREAD - 1)/NUM_THREAD, NUM_THREAD>>>(dev_vect_particle, numero_particelle);
+    // print_vet_particle<<<(numero_particelle + NUM_THREAD - 1)/NUM_THREAD, NUM_THREAD>>>(dev_vect_particle, numero_particelle);
     CHECK(cudaDeviceSynchronize());
 
     for(int i = 0, seed = NUM_THREAD; i < iterazioni && numero_particelle > 0; i++, seed++){
@@ -189,9 +193,9 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, int
         CHECK(cudaDeviceSynchronize());
 
         //printf("numero particelle dopo aggiornamento %i\n", numero_particelle);
-       
+        //  printf("%i\n", i);
     }
-    print_field_device<<<1,1>>>(dev_matrix, x, y);
+    // print_field_device<<<1,1>>>(dev_matrix, x, y);
 
 
     CHECK(cudaDeviceSynchronize());
