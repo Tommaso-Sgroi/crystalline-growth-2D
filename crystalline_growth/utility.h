@@ -1,13 +1,6 @@
 #include <stdlib.h>
-#include "../datastructures/dynamiclist.h"
+#include "../datastructures/space.h"
 
-#define RAND_SIZE_T() ({size_t retval;\
-                          retval = 0;\
-                        for (int i=0; i<64; i++) {\
-                            retval = retval*2 + rand()%2;\
-                        }\
-                        retval;\
-                    })
 
 #define CHECK(call){                    \
     const cudaError_t error = call;     \
@@ -95,4 +88,12 @@ __global__ void sort_particles(particle* particles, int size){
     int pos = atomicAdd(&position, 1);
     particles[pos] = p;
 
+}
+
+
+
+__host__ int get_max_thread_x_block(){
+    struct cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, 0);
+    return prop.maxThreadsPerBlock;
 }

@@ -15,10 +15,7 @@ int main(int argc, const char* argv[]) {
     int posizione_seed_y = string_to_int(argv[6]);
     int write_out = string_to_int(argv[7]);
 
-    struct cudaDeviceProp prop;
-    cudaGetDeviceProperties(&prop, 0);
 
-    //printDevProp(prop);
     return start_crystalline_growth(x, y, iterazioni, numero_particelle, posizione_seed_x, posizione_seed_y, write_out);
 
 }

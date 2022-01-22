@@ -1,4 +1,3 @@
-#include "space.h"
 
 /*struttura arraylist contiene un vettore di unsigned long che rappresentano il valore numerico della locazione in memoria dell'oggetto
 oppure di contenere un valore numerico positivo (come il client fd)*/

@@ -65,18 +65,33 @@ void init_field(struct space* space, const int posizione_seed_x, const int posiz
 }
 
 
+// __global__ void print_vet_particle(particle* particles, int h_numero_particelle) {
+//     int gloID = get_globalId();
+//     int GridSize = gridDim.x * blockDim.x;
+//     for(int i = gloID; i < h_numero_particelle; i += GridSize){
+//         print_particle(&particles[i]);
+//     }
+// }
 
 
-#define IS_IN_BOUNDS(x, y, len_x, len_y) (x >= 0 && x < len_x && y >= 0 && y < len_y) // poi voglio vedere se e cosa cambia utilizzando questa macro o la funzione
+__global__ void print_field_device(int* device_matrix, int len_x, int len_y){
+
+    for(int _x = 0; _x < len_x; _x++){
+        for(int _y = 0; _y < len_y; _y++){
+            printf("%s ", device_matrix[_x * len_y + _y] == 1? "C": "0");
+        }
+        printf("\n");
+    }
+
+}
 
 __device__ bool is_in_bounds(const int x, const int y, const int len_x, const int len_y){
         return x >= 0 && x < len_x && y >= 0 && y < len_y;
 }
 
-__device__ bool check_crystal_neighbor(int** space, particle* p, int len_x, int len_y){
+__device__ bool check_crystal_neighbor(int* space, particle* p, int len_x, int len_y){
         int points []= {-1, -1, -1, 0, -1, 1, 0, -1, 0, 1, 1, -1, 1, 0, 1, 1};
         
-        bool flag = false;
         for (int i = 0; i < 16; i++){
                 int dx = points[i];
                 int dy = points[++i];
@@ -85,27 +100,10 @@ __device__ bool check_crystal_neighbor(int** space, particle* p, int len_x, int 
                 int new_y = p->y + dy;
 
                 if(is_in_bounds(new_x, new_y, len_x, len_y) && 
-                        (*space)[new_x * len_y + new_y] == 1){
-                        flag = true;
+                        space[new_x * len_y + new_y] == 1){
+                        return true;
                 }
         }
-        return flag;
+        return false;
 }
 
-
-void print_field(struct space* space){
-
-    struct space s = *space;
-    for(int i = 0; i < s.len_x; i++){
-        for(int j = 0; j < s.len_y; j++){
-                if(s.field[i][j] == -1){
-                        printf("0 ");
-                }
-                if(s.field[i][j] == 1){
-                        printf("C ");
-                }
-        }
-        printf("\n");
-    }
-        
-}
