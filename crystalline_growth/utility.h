@@ -13,9 +13,18 @@
     const cudaError_t error = call;     \
     if(error != cudaSuccess){           \
         printf("Error: %s:%d", __FILE__, __LINE__); \
-        printf("code:%d, reason%s\n", error, cudaGetErrorString(error)); \
+        printf("code: %d, reason %s\n", error, cudaGetErrorString(error)); \
         exit(1);                        \
     }                                   \
+}
+
+
+__device__ int get_globalId(){
+    return blockIdx.x * blockDim.x + threadIdx.x;
+}
+
+__host__ int get_grid_size(int numero_particelle, const int NUM_THREAD){
+    return (numero_particelle + NUM_THREAD - 1)/NUM_THREAD;
 }
 
 __host__ int write_output(struct space* s){
@@ -33,9 +42,18 @@ __host__ int write_output(struct space* s){
         fprintf(f, "%s", "\n");
     }
     fclose(f);
-
     return 0;
 }
+
+
+__host__ void transform_2D_space_in_1D_array(space* space, int* buffer_field){
+    for(int x1 = 0; x1 < space->len_x; x1++){
+        for(int y1 = 0; y1 < space->len_y; y1++){
+            buffer_field[x1 * space->len_y + y1] = space->field[x1][y1];
+        }
+    }
+}
+
 
 __host__ void transfer_output(space* s, int* output_field){
 
@@ -69,11 +87,12 @@ __device__ int lcg64_temper(int* seed){
 
 __device__ int position;
 __global__ void sort_particles(particle* particles, int size){
-    int gloID = blockIdx.x * blockDim.x + threadIdx.x;
+    int gloID = get_globalId();
     if(gloID >= size || particles[gloID].x < 0) return; //esce se il thread non ha particelle o non ha una particella valida
     
     position = 0;
+    particle p = particles[gloID];
     int pos = atomicAdd(&position, 1);
-    particles[pos] = particles[gloID];
+    particles[pos] = p;
 
 }

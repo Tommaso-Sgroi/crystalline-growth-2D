@@ -50,8 +50,9 @@ void build_field(struct space* space){
         for(int i = 0; i < space->len_x; i++){
                 space->field[i] = (int*) calloc(space->len_y, sizeof(int)); // TODO PARALLELIZZARE
         }
-
 }
+
+
 
 
 void init_field(struct space* space, const int posizione_seed_x, const int posizione_seed_y/*, const int numero_partiinte*/){ 

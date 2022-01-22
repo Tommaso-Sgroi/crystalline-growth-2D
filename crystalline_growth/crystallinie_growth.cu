@@ -35,13 +35,13 @@ void print_grid(struct space* s, arraylist* p){
 }
 
 
-__global__ void move_and_precrystalize(particle* particles, int * dev_matrix, int len_x, int len_y, 
+__global__ void move_and_precrystalize(particle* particles, particle* dev_vect_precrystal, int * dev_matrix, int len_x, int len_y, 
                                        int iterazioni, int numero_particelle, int* numero_particelle_output, int seed){
 
     bool precrystal = false;
-    int gloID = blockIdx.x * blockDim.x + threadIdx.x;
+    int gloID = get_globalId();
     int locID = threadIdx.x;
-    int rng_seed = ((gloID + locID) * seed) + seed;
+    int rng_seed = ((gloID + locID) * seed) + (seed * 13) >> 3;
 
     // int GridSize = gridDim.x * blockDim.x;
     
@@ -51,55 +51,64 @@ __global__ void move_and_precrystalize(particle* particles, int * dev_matrix, in
     crystallized[0] = 0;
 
     particle p = particles[gloID];                                          //particella
-    if(gloID < numero_particelle){
-        //printf("RNG: %i\n", rng_seed);
-        precrystal = check_crystal_neighbor(&dev_matrix, &p, len_x, len_y);
-        if(!precrystal){           // if non è stato precristallizato nulla
+    if(gloID >= numero_particelle) return; // scarta se fuori dal range
+    //printf("RNG: %i\n", rng_seed);
+    precrystal = check_crystal_neighbor(&dev_matrix, &p, len_x, len_y);
+    if(!precrystal){           // if non è stato precristallizato nulla
 
-            int x_movement;
-            int y_movement;
+        int x_movement;
+        int y_movement;
 
-            int x = (lcg64_temper(&rng_seed) % 2 * (lcg64_temper(&rng_seed) % 2? 1: -1));
-            int y = (lcg64_temper(&rng_seed) % 2 * (lcg64_temper(&rng_seed) % 2? 1: -1));
-            //printf("Muovo particella (%i, %i); SEED: %i; Choosed: %i, %i\n", p.x, p.y, rng_seed, x, y);
+        int x = (lcg64_temper(&rng_seed) % 2 * (lcg64_temper(&rng_seed) % 2? 1: -1));
+        int y = (lcg64_temper(&rng_seed) % 2 * (lcg64_temper(&rng_seed) % 2? 1: -1));
+        //printf("Muovo particella (%i, %i); SEED: %i; Choosed: %i, %i\n", p.x, p.y, rng_seed, x, y);
 
-            x_movement =  p.x + x; // pick random x direction
-            y_movement =  p.y + y; // pick random y direction
-            if(!is_in_bounds(x_movement, y_movement, len_x, len_y)){
-                //printf("IS_NOT_IN_BOUNDS\n");
-                x_movement = p.x;
-                y_movement = p.y;
-            }
-            p.x = x_movement;
-            p.y = y_movement;
+        x_movement =  p.x + x; // pick random x direction
+        y_movement =  p.y + y; // pick random y direction
+        if(!is_in_bounds(x_movement, y_movement, len_x, len_y)){
+            //printf("IS_NOT_IN_BOUNDS\n");
+            x_movement = p.x;
+            y_movement = p.y;
         }
-        else{
-            
-        }
+        p.x = x_movement;
+        p.y = y_movement;
         particles[gloID] = p;
-        __syncthreads();  // controllato se ha finito il blocco allora passa alla cristallizzazione
-        if(precrystal){
-            //printf("Cristallizzo particella %i, %i\n", p.x, p.y);
-            dev_matrix[p.x * len_y + p.y] = 1;
-            atomicAdd(&crystallized[0], 1U);
-            particles[gloID].x = -1;
-        }
+    }
+    //__syncthreads();  // controllato se ha finito il blocco allora passa alla cristallizzazione
+    /*if(precrystal)*/
+    else{
+        //printf("Cristallizzo particella %i, %i\n", p.x, p.y);
+        // dev_matrix[p.x * len_y + p.y] = 1;
+        dev_vect_precrystal[gloID] = p;     // salva partiella sulle precristallizzate
+        atomicAdd(&crystallized[0], 1U);    // incrementa contatore delle precristallizzate del blocco
+        particles[gloID].x = -1;            // invalida particella
+    }
 
-        __syncthreads();
-        //printf("Crisallizzate %i\n", crystallized[0]);
-        if(locID == 0){    
-            atomicAdd(numero_particelle_output, crystallized[0]);
-            //printf("Crisallizzate GLOBALI %i\n", *numero_particelle_output);
-        }
+    __syncthreads();
+    //printf("Crisallizzate %i\n", crystallized[0]);
+    if(locID == 0){    
+        atomicAdd(numero_particelle_output, crystallized[0]);
+        //printf("Crisallizzate GLOBALI %i\n", *numero_particelle_output);
     }
 
 }
 
 
+__global__ void crystallize(particle* dev_vect_precrystal, int* dev_matrix, int len_y, int size){
+    int gloID = get_globalId();
+    if(gloID >= size || dev_vect_precrystal[gloID].x < 0) return; //esce se il thread non ha particelle o non ha una particella valida
+    particle p = dev_vect_precrystal[gloID];
+    dev_matrix[p.x * len_y + p.y] = 1;
+    
+    p.x = -1;                       //invalido x
+    p.y = -1;                       //invalido y
+    dev_vect_precrystal[gloID] = p; //invalido la particella sul vettore
+}
+
 
 
 __global__ void build_vector_particle(particle* particles, int numero_particelle, int len_x, int len_y, int posizione_seed_x, int posizione_seed_y){
-    int gloID = blockIdx.x * blockDim.x + threadIdx.x;
+    int gloID = get_globalId();
     int GridSize = gridDim.x * blockDim.x;
     int seed = gloID + 7;
     for(int i = gloID; i < numero_particelle; i += GridSize){
@@ -115,7 +124,7 @@ __global__ void build_vector_particle(particle* particles, int numero_particelle
 }
 
 __global__ void print_vet_particle(particle* particles, int numero_particelle) {
-    int gloID = blockIdx.x * blockDim.x + threadIdx.x;
+    int gloID = get_globalId();
     int GridSize = gridDim.x * blockDim.x;
     for(int i = gloID; i < numero_particelle; i += GridSize){
         print_particle(&particles[i]);
@@ -150,28 +159,28 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, int
     int* dev_matrix;
     int* crystallized_particles_n;
     particle* dev_vect_particle;
+    particle* dev_vect_precrystal;
 
     int buffer_field [x * y];
-    for(int x1 = 0; x1 < x; x1++){
-        for(int y1 = 0; y1 < y; y1++){
-                buffer_field[x1 * y + y1] = space.field[x1][y1]; // inizializzo la inta
-        }
-    }
+    transform_2D_space_in_1D_array(&space, buffer_field);
 
 
-    int grid = (numero_particelle + NUM_THREAD - 1)/NUM_THREAD;
+    //int grid = (numero_particelle + NUM_THREAD - 1)/NUM_THREAD;
     CHECK(cudaMalloc((void**) &dev_matrix, x * y * sizeof(int)));
     CHECK(cudaMalloc((void**) &dev_vect_particle, numero_particelle * sizeof(particle)));
+    CHECK(cudaMalloc((void**) &dev_vect_precrystal, numero_particelle * sizeof(particle)));
     CHECK(cudaMallocManaged(&crystallized_particles_n, sizeof(int)));
 
     printf("Allocata memoria\n");
 
     CHECK(cudaMemcpy(dev_matrix, buffer_field, x * y * sizeof(int), cudaMemcpyHostToDevice));
     CHECK(cudaMemset(crystallized_particles_n, 0, 1));
+    CHECK(cudaMemset(dev_vect_precrystal, -1, numero_particelle * sizeof(particle)));
+
     printf("Inizializzata memoria\n");
  
 
-    build_vector_particle<<< grid, NUM_THREAD  >>>(dev_vect_particle, numero_particelle, x, y, posizione_seed_x, posizione_seed_y);
+    build_vector_particle<<< get_grid_size(numero_particelle, NUM_THREAD), NUM_THREAD  >>>(dev_vect_particle, numero_particelle, x, y, posizione_seed_x, posizione_seed_y);
     // print_field_device<<<1,1>>>(dev_matrix, x, y);
     printf("Coatruito vettore particelle\n");
     
@@ -180,16 +189,18 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, int
 
     for(int i = 0, seed = NUM_THREAD; i < iterazioni && numero_particelle > 0; i++, seed++){
         //printf("ITERO!!\n");
-        move_and_precrystalize<<<(numero_particelle + NUM_THREAD - 1)/NUM_THREAD, NUM_THREAD>>>
-                        (dev_vect_particle, dev_matrix, x, y, iterazioni, numero_particelle, crystallized_particles_n, seed);
+        move_and_precrystalize<<<get_grid_size(numero_particelle, NUM_THREAD), NUM_THREAD>>>
+                        (dev_vect_particle, dev_vect_precrystal, dev_matrix, x, y, iterazioni, numero_particelle, crystallized_particles_n, seed);
         CHECK(cudaDeviceSynchronize());
         
+        crystallize<<<get_grid_size(numero_particelle, NUM_THREAD), NUM_THREAD>>>(dev_vect_precrystal, dev_matrix, y, numero_particelle);
+        CHECK(cudaDeviceSynchronize());
        
         //printf("Numero particelle %i -> ", numero_particelle);
                
         numero_particelle -= *crystallized_particles_n; //aggiornamento delle particelle
         crystallized_particles_n[0] = 0;
-        sort_particles<<<(numero_particelle + NUM_THREAD - 1)/ NUM_THREAD, NUM_THREAD>>>(dev_vect_particle, numero_particelle);
+        sort_particles<<<get_grid_size(numero_particelle, NUM_THREAD), NUM_THREAD>>>(dev_vect_particle, numero_particelle);
         CHECK(cudaDeviceSynchronize());
 
         //printf("numero particelle dopo aggiornamento %i\n", numero_particelle);
@@ -198,15 +209,14 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, int
     // print_field_device<<<1,1>>>(dev_matrix, x, y);
 
 
-    CHECK(cudaDeviceSynchronize());
     if(write_out == 1){
-        int space_monodimention[x * y];
-        CHECK(cudaMemcpy(space_monodimention, dev_matrix, x * y * sizeof(int), cudaMemcpyDeviceToHost));
-        transfer_output(&space, space_monodimention);
+        CHECK(cudaMemcpy(buffer_field, dev_matrix, x * y * sizeof(int), cudaMemcpyDeviceToHost));
+        transfer_output(&space, buffer_field);
+        write_output(&space);
     }
 
     CHECK(cudaFree(crystallized_particles_n));
     CHECK(cudaFree(dev_matrix));
     CHECK(cudaFree(dev_vect_particle));
-    return write_out == 1? write_output(&space): 0;
+    return 0;
 }
