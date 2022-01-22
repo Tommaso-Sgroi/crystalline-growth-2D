@@ -1,4 +1,4 @@
-#include "crystalline_growth/crystallinie_growth.cu"
+#include "crystalline_growth/crystallinie_growth_singlecore.cu"
 
 
 

@@ -36,23 +36,12 @@ matrix:
 
  inzializzo il campo (la matrice che contiene le inte per le partiinte)
 */
-/*int** build_field(const int x, const int y){
-
-        int** field = (int**) calloc(x, sizeof(int*));
-        for(int i = 0; i < x; i++){
-                field[i] = (int*) calloc(y, sizeof(int)); // TODO PARALLELIZZARE
-        }
-        return field;
-}*/
-
 void build_field(struct space* space){
         space->field = (int**) calloc(space->len_x, sizeof(int*));
         for(int i = 0; i < space->len_x; i++){
                 space->field[i] = (int*) calloc(space->len_y, sizeof(int)); // TODO PARALLELIZZARE
         }
 }
-
-
 
 
 void init_field(struct space* space, const int posizione_seed_x, const int posizione_seed_y/*, const int numero_partiinte*/){ 
@@ -64,26 +53,6 @@ void init_field(struct space* space, const int posizione_seed_x, const int posiz
        }
 }
 
-
-// __global__ void print_vet_particle(particle* particles, int h_numero_particelle) {
-//     int gloID = get_globalId();
-//     int GridSize = gridDim.x * blockDim.x;
-//     for(int i = gloID; i < h_numero_particelle; i += GridSize){
-//         print_particle(&particles[i]);
-//     }
-// }
-
-
-__global__ void print_field_device(int* device_matrix, int len_x, int len_y){
-
-    for(int _x = 0; _x < len_x; _x++){
-        for(int _y = 0; _y < len_y; _y++){
-            printf("%s ", device_matrix[_x * len_y + _y] == 1? "C": "0");
-        }
-        printf("\n");
-    }
-
-}
 
 __device__ bool is_in_bounds(const int x, const int y, const int len_x, const int len_y){
         return x >= 0 && x < len_x && y >= 0 && y < len_y;

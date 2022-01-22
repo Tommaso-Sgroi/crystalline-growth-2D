@@ -1,0 +1,7 @@
+./out/main_singlecore.o 3 5 1000 15 1 2 1
+#    int x = string_to_int(argv[1]);
+#    int y = string_to_int(argv[2]);
+#    int iterazioni = string_to_int(argv[3]);
+#    int numero_particelle = string_to_int(argv[4]);
+#    int posizione_seed_x = string_to_int(argv[5]);
+#    int posizione_seed_y = string_to_int(argv[6]);

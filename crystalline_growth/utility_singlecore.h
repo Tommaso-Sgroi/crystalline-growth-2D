@@ -81,14 +81,29 @@ __device__ int lcg64_temper(int* seed){
 __device__ int position;
 __global__ void sort_particles(particle* particles, int size){
     int gloID = get_globalId();
-    if(gloID >= size || particles[gloID].x < 0) return; //esce se il thread non ha particelle o non ha una particella valida
-    
+    //int GridSize = gridDim.x * blockDim.x;
+
+    if(gloID >= size /*|| particles[gloID].x < 0*/) return; //esce se il thread non ha particelle o non ha una particella valida
     position = 0;
-    particle p = particles[gloID];
-    int pos = atomicAdd(&position, 1);
-    particles[pos] = p;
+    for(int i = 0; i < size; i++){
+        if(particles[i].x < 0) continue;
+        particle p = particles[i];
+        int pos = atomicAdd(&position, 1);
+        particles[pos] = p;
+    }
 
 }
+
+// __global__ void sort_particles(particle* particles, int size){
+//     int gloID = get_globalId();
+//     if(gloID >= size || particles[gloID].x < 0) return; //esce se il thread non ha particelle o non ha una particella valida
+    
+//     position = 0;
+//     particle p = particles[gloID];
+//     int pos = atomicAdd(&position, 1);
+//     particles[pos] = p;
+
+// }
 
 __host__ int get_max_thread_x_block(){
     struct cudaDeviceProp prop;
