@@ -9,8 +9,8 @@ __global__ void move_and_precrystalize(particle* particles, particle* vect_precr
     //if(gloID >= numero_particelle) return; // scarta se fuori dal range
     
     int locID = threadIdx.x;
-    int rng_seed = ((gloID + locID) * seed) + (seed * 13) >> 3;
 
+    //prinf("GLOIDDDD: %i\n", gloID);
     //int GridSize = gridDim.x * blockDim.x;
     
     //if(gloID >= h_numero_particelle) return;
@@ -18,7 +18,12 @@ __global__ void move_and_precrystalize(particle* particles, particle* vect_precr
     __shared__ int crystallized[1];
     crystallized[0] = 0;
     for(int i = 0; i < numero_particelle; i++){
-        //printf("i: %i; INC: %i\n", i, GridSize);
+        int rng_seed = ((gloID) * seed) + (seed * 13) >> 3;
+        
+        if(gloID == 0)
+            printf("%i\n", rng_seed);
+
+        //prinf("gloID: %i; seed: %i; rng_seed: %i;\n", gloID, seed, rng_seed);
 
         particle p = particles[i];   //particella
         //printf("RNG: %i\n", rng_seed);
@@ -30,7 +35,7 @@ __global__ void move_and_precrystalize(particle* particles, particle* vect_precr
 
             int x = (lcg64_temper(&rng_seed) % 2 * (lcg64_temper(&rng_seed) % 2? 1: -1));
             int y = (lcg64_temper(&rng_seed) % 2 * (lcg64_temper(&rng_seed) % 2? 1: -1));
-            printf("Muovo particella (%i, %i); SEED: %i; Choosed: %i, %i\n", p.x, p.y, rng_seed, x, y);
+            //prinf("Muovo particella (%i, %i); SEED: %i; Choosed: %i, %i\n", p.x, p.y, rng_seed, x, y);
 
             x_movement =  p.x + x; // pick random x direction
             y_movement =  p.y + y; // pick random y direction
@@ -42,19 +47,23 @@ __global__ void move_and_precrystalize(particle* particles, particle* vect_precr
             p.x = x_movement;
             p.y = y_movement;
             particles[i] = p;
+            if(gloID == 0)
+                printf("%i\n______\n", rng_seed);
+
         }
         else{
-            printf("Precristallizzo: %i, %i\n", p.x, p.y);
+            ////prinf("Precristallizzo: %i, %i\n", p.x, p.y);
             vect_precrystal[i] = p;         // salva partiella sulle precristallizzate
-            atomicAdd(&crystallized[0], 1U);    // incrementa contatore delle precristallizzate del blocco
+            atomicAdd(crystallized, 1);     // incrementa contatore delle precristallizzate del blocco
             particles[i].x = -1;            // invalida particella
         }
+        gloID++;
+
     }
     __syncthreads();
     if(locID == 0){    
         atomicAdd(d_h_numero_particelle_output, crystallized[0]);
     }
-
 }
 
 
@@ -68,7 +77,7 @@ __global__ void crystallize(particle* dev_vect_precrystal, int* dev_matrix, int 
         if(dev_vect_precrystal[i].x < 0) continue;
 
         particle p = dev_vect_precrystal[i];
-        printf("Cristallizzo: %i, %i\n", p.x, p.y);
+        //prinf("Cristallizzo: %i, %i\n", p.x, p.y);
 
         dev_matrix[p.x * len_y + p.y] = 1;
         
@@ -83,10 +92,13 @@ __global__ void crystallize(particle* dev_vect_precrystal, int* dev_matrix, int 
 __global__ void build_vector_particle(particle* particles, int h_numero_particelle, int len_x, int len_y, int posizione_seed_x, int posizione_seed_y){
     int gloID = get_globalId();
     //int GridSize = gridDim.x * blockDim.x;
-    int seed = gloID + 7;
-    seed = ((gloID + threadIdx.x) * seed) + (seed * 13) >> 3;
+
 
     for(int i = 0; i < h_numero_particelle; i++){
+        int seed = gloID + 7;
+        seed = ((gloID) * seed) + (seed * 13) >> 3;
+        gloID++;
+
         particle p;
         do
         {
@@ -146,7 +158,7 @@ __host__ int start_crystalline_growth(const int x, const int y, const int iteraz
     //printf("Coatruito vettore particelle\n");
     CHECK(cudaDeviceSynchronize());
 
-    for(int h_i = 0, h_seed = H_NUM_THREAD; h_i < iterazioni && h_numero_particelle > 0; h_i++, h_seed++){
+    for(int h_i = 0, h_seed = 1; h_i < iterazioni && h_numero_particelle > 0; h_i++, h_seed++){
         move_and_precrystalize<<<grid, H_NUM_THREAD>>>(
                 d_vect_particle, d_vect_precrystal, d_matrix, x, y, iterazioni, h_numero_particelle, d_h_crystallized_particles_n, h_seed
             );

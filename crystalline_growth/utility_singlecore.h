@@ -21,7 +21,7 @@ __host__ int get_grid_size(int numero_particelle, const int NUM_THREAD){
 }
 
 __host__ int write_output(struct space* s){
-    FILE *f = fopen("output.space", "w");
+    FILE *f = fopen("output_single.space", "w");
     if (f == NULL){
         printf("Error opening file!\n");
         exit(1);

@@ -78,16 +78,13 @@ __device__ int lcg64_temper(int* seed){
 	return out;
 }
 
-__device__ int position;
-__global__ void sort_particles(particle* particles, int size){
+__global__ void sort_particles(particle* particles, int* position, int size){
     int gloID = get_globalId();
     if(gloID >= size || particles[gloID].x < 0) return; //esce se il thread non ha particelle o non ha una particella valida
     
-    position = 0;
     particle p = particles[gloID];
-    int pos = atomicAdd(&position, 1);
+    int pos = atomicAdd(position, 1);
     particles[pos] = p;
-
 }
 
 __host__ int get_max_thread_x_block(){
