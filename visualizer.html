@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <style>
+        .block{
+            background-color: black;
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            outline-width: 1px;
+            outline-color: black;
+            outline-style: auto;
+        }
+        .space{
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            outline-width: 1px;
+            outline-color: black;
+            outline-style: auto;
+        }
+        div{
+            display: block;
+            margin: -4px auto;
+        }
+    </style>
+
+</head>
+<body>
+    <input type="file" id="file-input" multiple/>
+    <br>
+    <br>
+    <div class="buttonDiv">
+        <button onClick="previous()">previous</button>
+        <button onClick="next()">next</button>
+    </div>
+    <br>
+    <div class="content"></div>
+
+    <script>
+
+    var content = document.querySelector(".content")
+
+    var grid = ""
+
+    var grids = [];
+    var index = 0;
+
+    var reader;
+
+    ////////////////////////////////////
+    function readMultipleFiles(e) {
+        index = 0;
+        grids = [];
+        grid = [];
+        renderGrid()
+        for (var i = 0; i < e.target.files.length; i++){
+            grids.push(e.target.files[i]);
+        }
+        if(!grids.length){
+            return;
+        }
+        reader = new FileReader();
+        reader.onload = function(e) {
+            var contents = e.target.result;
+            displayContents(contents);
+        };
+        index = 0;
+        reader.readAsText(grids[index]);
+    }
+
+    function displayContents(contents) {
+        grid = contents;
+        document.querySelector("body").removeChild(content)
+        content = document.createElement("div")
+        content.className = "content"
+        document.querySelector("body").appendChild(content)
+        renderGrid()
+    }
+
+    document.getElementById('file-input')
+    .addEventListener('change', readMultipleFiles, false);
+
+
+    //////////////////////
+
+    renderGrid();
+
+    function renderGrid(){
+        var div = document.createElement("div");
+        for(let element of grid){
+            if(element == ","){
+                continue;
+            }
+            else if(element == " "){
+                let newLabel = document.createElement("label");
+                newLabel.className = "space";
+                div.appendChild(newLabel);
+            }
+            else if(element == "*"){
+                let newLabel = document.createElement("label");
+                newLabel.className = "block";
+                div.appendChild(newLabel);
+            }
+            else{
+                let aCapo = document.createElement("br");
+                aCapo.className = "aCapo"
+                content.appendChild(div);
+                div = document.createElement("div");
+            }
+        }
+    }
+
+    function previous(){
+        if(index > 0){
+            index--
+            reader.readAsText(grids[index]);
+        }
+    }
+
+    function next(){
+        if(index < grids.length - 1){
+            index++
+            reader.readAsText(grids[index]);
+        }
+    }
+
+    </script>
+</body>
+</html>

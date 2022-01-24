@@ -47,7 +47,7 @@ void build_field(struct space* space){
 void init_field(struct space* space, const int posizione_seed_x, const int posizione_seed_y/*, const int numero_partiinte*/){ 
        for(int x = 0; x < space->len_x; x++){
                 for(int y = 0; y < space->len_y; y++){
-                        space->field[x][y] = -1; // inizializzo la inta
+                        space->field[x][y] = 0; // inizializzo la inta
                 }
         space->field[posizione_seed_x][posizione_seed_y] = 1;                       
        }
@@ -70,6 +70,8 @@ __device__ bool check_crystal_neighbor(int* space, particle* p, int len_x, int l
 
                 if(is_in_bounds(new_x, new_y, len_x, len_y) && 
                         space[new_x * len_y + new_y] == 1){
+                        printf("Trovata particella da cristallizare a %i, %i VICINO %i, %i\n",
+                                p->x, p->y, new_x, new_y);
                         return true;
                 }
         }

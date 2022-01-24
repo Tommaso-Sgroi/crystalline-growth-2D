@@ -1,4 +1,4 @@
-./out/main.o 30 50 10000 200 15 25 0
+./out/main.o 5 10 700 10 2 5 1
 #./out/main_singlecore.o 30 50 10000 200 15 25 0
 
 #    int x = string_to_int(argv[1]);

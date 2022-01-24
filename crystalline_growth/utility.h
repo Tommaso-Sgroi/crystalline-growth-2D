@@ -69,26 +69,63 @@ __device__ int temper(int x)
 
 
 __device__ int lcg64_temper(int* seed){
-    //printf("SEED_START: %i\n", *seed);
-
 	*seed = 6364136223846793005ULL * (*seed) + 1;
-    //printf("SEED_END: %i\n", *seed);
-
-    int out = temper(*seed >> 16);
-	return out;
+	return temper(*seed >> 16);
 }
 
-__global__ void sort_particles(particle* particles, int* position, int size){
-    int gloID = get_globalId();
-    if(gloID >= size || particles[gloID].x < 0) return; //esce se il thread non ha particelle o non ha una particella valida
-    
-    particle p = particles[gloID];
-    int pos = atomicAdd(position, 1);
-    particles[pos] = p;
-}
 
 __host__ int get_max_thread_x_block(){
     struct cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, 0);
     return prop.maxThreadsPerBlock;
+}
+
+
+
+__global__ void print_particle_vector(particle* pv, int pn){
+    for(int i = 0; i < pn; i++){
+        print_particle(&pv[i]);
+    }
+}
+
+
+__global__ void print_field(int* field, int len_x, int len_y){
+    for(int i=0; i<len_x; i++){
+        for(int j=0; j<len_y; j++){
+            printf("%i ", field[i * len_y + j]);
+        }
+        printf("\n");
+    }
+    
+}
+
+__global__ void odd_even_sort(particle* p, int pn, int phase, bool* swapped){
+    int gloid = get_globalId();
+    if(gloid >= pn) return; //esce se il thread non ha particelle o non ha una particella valida
+    
+    int start = gloid * 2 + phase;
+    int end = start + 1;
+
+    if(p[start].x < p[end].x){
+        particle tmp = p[start];
+        p[start] = p[end];
+        p[end] = tmp;
+        *swapped = true;
+    }
+}
+
+
+__host__ void sort_particles(particle* d_p, int pn, int h_tn, bool* d_h_swapped){
+    bool h_old_val = false;
+    int h_phase = 0;
+    *d_h_swapped = 0;
+
+    do{
+        h_old_val = *d_h_swapped;
+        *d_h_swapped = false;
+
+        odd_even_sort <<<get_grid_size(pn / 2, h_tn), h_tn>>>(d_p, pn / 2, h_phase, d_h_swapped);
+        CHECK(cudaDeviceSynchronize());
+        h_phase = (h_phase + 1) % 2;
+    }while(h_old_val || *d_h_swapped);
 }
