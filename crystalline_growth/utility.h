@@ -82,9 +82,9 @@ __host__ int get_max_thread_x_block(){
 
 
 
-__global__ void print_particle_vector(particle* pv, int pn){
+__global__ void print_particle_vector(particle* g_pv, int pn){
     for(int i = 0; i < pn; i++){
-        print_particle(&pv[i]);
+        print_particle(&g_pv[i]);
     }
 }
 
@@ -99,26 +99,29 @@ __global__ void print_field(int* field, int len_x, int len_y){
     
 }
 
-__global__ void odd_even_sort(particle* p, int pn, int phase){
+__global__ void odd_even_sort(particle* g_p, int pn, int phase){
     int gloid = get_globalId();
-    if(gloid >= pn) return; //esce se il thread non ha particelle o non ha una particella valida
+    if(gloid >= pn) return;
     
     int start = gloid * 2 + phase;
     int end = start + 1;
 
-    if(p[start].x < p[end].x){
-        particle tmp = p[start];
-        p[start] = p[end];
-        p[end] = tmp;
+    if(g_p[start].x < g_p[end].x){
+        particle tmp = g_p[start];
+        g_p[start] = g_p[end];
+        g_p[end] = tmp;
     }
 }
 
 
-__host__ void sort_particles(particle* d_p, int pn, int h_tn){
+__host__ void sort_particles(particle* d_p, int h_pn, int h_tn){
     int h_phase = 0;
-    for(int i = 0; i < pn; i++){
-        odd_even_sort <<<get_grid_size(pn, h_tn), h_tn>>>(d_p, pn / 2, h_phase);
+    
+    for(int i = 0; i < h_pn; i++){
+
+        odd_even_sort <<<get_grid_size(h_pn, h_tn), h_tn>>>(d_p, h_pn / 2, h_phase);
         CHECK(cudaDeviceSynchronize());
+        
         h_phase = (h_phase + 1) % 2;
     }
 }

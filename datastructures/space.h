@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdbool.h>
 #include <cuda.h>
@@ -34,20 +33,20 @@ matrix:
  x
 
 
- inzializzo il campo (la matrice che contiene le inte per le partiinte)
+ inzializzo il campo (matrice delle particelle)
 */
 void build_field(struct space* space){
         space->field = (int**) calloc(space->len_x, sizeof(int*));
         for(int i = 0; i < space->len_x; i++){
-                space->field[i] = (int*) calloc(space->len_y, sizeof(int)); // TODO PARALLELIZZARE
+                space->field[i] = (int*) calloc(space->len_y, sizeof(int));
         }
 }
 
 
-void init_field(struct space* space, const int posizione_seed_x, const int posizione_seed_y/*, const int numero_partiinte*/){ 
+void init_field(struct space* space, const int posizione_seed_x, const int posizione_seed_y){ 
        for(int x = 0; x < space->len_x; x++){
                 for(int y = 0; y < space->len_y; y++){
-                        space->field[x][y] = 0; // inizializzo la inta
+                        space->field[x][y] = 0;
                 }
         space->field[posizione_seed_x][posizione_seed_y] = 1;                       
        }
@@ -70,8 +69,6 @@ __device__ bool check_crystal_neighbor(int* space, particle* p, int len_x, int l
 
                 if(is_in_bounds(new_x, new_y, len_x, len_y) && 
                         space[new_x * len_y + new_y] == 1){
-                        printf("Trovata particella da cristallizare a %i, %i VICINO %i, %i\n",
-                                p->x, p->y, new_x, new_y);
                         return true;
                 }
         }
