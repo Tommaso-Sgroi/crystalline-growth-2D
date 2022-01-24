@@ -99,7 +99,7 @@ __global__ void print_field(int* field, int len_x, int len_y){
     
 }
 
-__global__ void odd_even_sort(particle* p, int pn, int phase, bool* swapped){
+__global__ void odd_even_sort(particle* p, int pn, int phase){
     int gloid = get_globalId();
     if(gloid >= pn) return; //esce se il thread non ha particelle o non ha una particella valida
     
@@ -110,22 +110,15 @@ __global__ void odd_even_sort(particle* p, int pn, int phase, bool* swapped){
         particle tmp = p[start];
         p[start] = p[end];
         p[end] = tmp;
-        *swapped = true;
     }
 }
 
 
-__host__ void sort_particles(particle* d_p, int pn, int h_tn, bool* d_h_swapped){
-    bool h_old_val = false;
+__host__ void sort_particles(particle* d_p, int pn, int h_tn){
     int h_phase = 0;
-    *d_h_swapped = 0;
-
-    do{
-        h_old_val = *d_h_swapped;
-        *d_h_swapped = false;
-
-        odd_even_sort <<<get_grid_size(pn / 2, h_tn), h_tn>>>(d_p, pn / 2, h_phase, d_h_swapped);
+    for(int i = 0; i < pn; i++){
+        odd_even_sort <<<get_grid_size(pn, h_tn), h_tn>>>(d_p, pn / 2, h_phase);
         CHECK(cudaDeviceSynchronize());
         h_phase = (h_phase + 1) % 2;
-    }while(h_old_val || *d_h_swapped);
+    }
 }
