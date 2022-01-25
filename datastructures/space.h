@@ -59,7 +59,7 @@ __device__ bool is_in_bounds(const int x, const int y, const int len_x, const in
 
 __device__ bool check_crystal_neighbor(int* space, particle* p, int len_x, int len_y){
         int points []= {-1, -1, -1, 0, -1, 1, 0, -1, 0, 1, 1, -1, 1, 0, 1, 1};
-        
+        int flag = false;
         for (int i = 0; i < 16; i++){
                 int dx = points[i];
                 int dy = points[++i];
@@ -69,9 +69,9 @@ __device__ bool check_crystal_neighbor(int* space, particle* p, int len_x, int l
 
                 if(is_in_bounds(new_x, new_y, len_x, len_y) && 
                         space[new_x * len_y + new_y] == 1){
-                        return true;
+                        flag = true;
                 }
         }
-        return false;
+        return flag;
 }
 

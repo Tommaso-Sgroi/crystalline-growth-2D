@@ -15,8 +15,7 @@ __global__ void move_and_precrystalize(particle* g_particles, particle* g_vect_p
     s_crystallized = 0;
 
     particle p = g_particles[gloID];                                          //particella
-    precrystal = check_crystal_neighbor(g_matrix, &p, len_x, len_y);
-    if(!precrystal){           // if non è stato precristallizato 
+    if(check_crystal_neighbor(g_matrix, &p, len_x, len_y) == false){           // if non è stato precristallizato 
 
         int x_movement;
         int y_movement;
