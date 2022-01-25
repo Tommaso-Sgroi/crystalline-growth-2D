@@ -1,0 +1,37 @@
+int temper(int x)
+{
+	x ^= x>>11;
+	x ^= x<<7 & 0x9D2C5680;
+	x ^= x<<15 & 0xEFC60000;
+	x ^= x>>18;
+	return x;
+}
+
+int lcg64_temper_i(int seed){
+	seed = 6364136223846793005ULL * seed + 1;
+	return temper(seed >> 16);
+}
+
+int lcg64_temper_p(particle* seed){
+	seed->rng = 6364136223846793005ULL * (seed->rng) + 1;
+	return temper(seed->rng >> 16);
+}
+
+
+
+void build_vector_particle(arraylist* particles_final, int numero_particelle, int len_x, int len_y, particle seed){
+    
+    arraylist particles;
+    initArray(&particles, numero_particelle + 1);
+    for (int i = 0, rng_seed = 7; i < numero_particelle; i++, rng_seed++){
+        particle p;
+        do
+        {
+            p.x = lcg64_temper_i(rng_seed++) % len_x;
+            p.y = lcg64_temper_i(rng_seed++) % len_y;
+        }while(p.x == seed.x && p.y == seed.y);
+        p.rng = lcg64_temper_i(rng_seed);
+        insertArray(particles_final, &p);
+    }
+    freeArray(&particles);
+}    

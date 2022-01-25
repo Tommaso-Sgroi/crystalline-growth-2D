@@ -7,7 +7,6 @@ __global__ void move_and_precrystalize(particle* g_particles, particle* g_vect_p
     int gloID = get_globalId();
     if(gloID >= numero_particelle) return; // se il thread è fuori dal range delle particelle 
 
-    bool precrystal = false;
     int locID = threadIdx.x;
     int rng_seed = gloID + seed;
 
