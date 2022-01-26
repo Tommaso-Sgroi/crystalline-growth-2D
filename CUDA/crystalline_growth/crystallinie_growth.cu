@@ -8,7 +8,6 @@ __global__ void move_and_precrystalize(particle* g_particles, particle* g_vect_p
     if(gloID >= numero_particelle || (g_particles[gloID].x < 0 && threadIdx.x != 0)) return; // se il thread è fuori dal range delle particelle 
 
     int locID = threadIdx.x;
-    int rng_seed = gloID /*+ seed*/;
 
     __shared__ int s_crystallized;
     s_crystallized = 0;
@@ -20,8 +19,8 @@ __global__ void move_and_precrystalize(particle* g_particles, particle* g_vect_p
             int x_movement;
             int y_movement;
 
-            int x = (lcg64_temper(&rng_seed) % 3) - 1;
-            int y = (lcg64_temper(&rng_seed) % 3) - 1;
+            int x = (lcg64_temper_p(&p) % 3) - 1;
+            int y = (lcg64_temper_p(&p) % 3) - 1;
 
             x_movement =  p.x + x; // pick random x direction
             y_movement =  p.y + y; // pick random y direction

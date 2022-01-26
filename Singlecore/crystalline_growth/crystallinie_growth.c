@@ -120,7 +120,7 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
     build_field(&space);
     init_field(&space, posizione_seed_x, posizione_seed_y);
     build_vector_particle(&particles, numero_particelle, space.len_x, space.len_y, posizione_seed_x, posizione_seed_y);
-    print_array(&particles);
+    //print_array(&particles);
     //muovo e precristallizzo
     move_and_precrystalize(&particles, &precrystallized_particles, &space, iterazioni);
 
