@@ -5,7 +5,7 @@
 
 //_______________________________PARTICLE_______________________________________-
 typedef struct __align__(8) {
-    int x, y;
+    int x, y, rng;
 }particle;
 
 /*Alloca nell'heap una nuova particella*/

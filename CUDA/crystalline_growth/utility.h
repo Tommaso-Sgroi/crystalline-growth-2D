@@ -73,6 +73,16 @@ __device__ int lcg64_temper(int* seed){
 	return temper(*seed >> 16);
 }
 
+__device__ int lcg64_temper_i(int seed){
+	seed = 6364136223846793005ULL * seed + 1;
+	return temper(seed >> 16);
+}
+
+__device__ int lcg64_temper_p(particle* seed){
+	seed->rng = 6364136223846793005ULL * (seed->rng) + 1;
+	return temper(seed->rng >> 16);
+}
+
 
 __host__ int get_max_thread_x_block(){
     struct cudaDeviceProp prop;

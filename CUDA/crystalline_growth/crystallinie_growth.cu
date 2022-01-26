@@ -65,15 +65,16 @@ __global__ void crystallize(particle* g_vect_precrystal, int* g_matrix, int len_
 __global__ void build_vector_particle(particle* g_particles, int numero_particelle, int len_x, int len_y, int posizione_seed_x, int posizione_seed_y){
     int gloID = get_globalId();
     if(gloID >= numero_particelle) return;
-    int seed = gloID + 7;
-    seed = ((gloID) * seed) + (seed * 13) >> 3;
+    int rng_seed = (7 + gloID) * (7 * gloID + 1);
+    printf("Seed: %i\n", rng_seed);
     particle p;
     do
     {
         //genera casualmente particelle nella matrice 
-        p.x = lcg64_temper(&seed) % len_x;
-        p.y = lcg64_temper(&seed) % len_y;
+        p.x = lcg64_temper_i(rng_seed++) % len_x;
+        p.y = lcg64_temper_i(rng_seed++) % len_y;
     }while(p.x == posizione_seed_x && p.y == posizione_seed_y);
+    p.rng = lcg64_temper_i(rng_seed);
     g_particles[gloID] = p;
 }
 
@@ -114,7 +115,11 @@ __host__ int start_crystalline_growth(const int h_x, const int h_y, const int h_
     build_vector_particle<<< get_grid_size(h_numero_particelle, H_NUM_THREAD), H_NUM_THREAD  >>>(d_vect_particle, h_numero_particelle, h_space.len_x, h_space.len_y, h_posizione_seed_x, h_posizione_seed_y);
     CHECK(cudaDeviceSynchronize());
 
-    
+
+    print_particle_vector<<<1,1>>>(d_vect_particle, h_numero_particelle);
+    CHECK(cudaDeviceSynchronize());
+
+
     for(int h_i = 0, h_seed = 0xEE234f12; h_i < h_iterazioni && *d_h_crystallized_particles_n < h_numero_particelle; h_i++, h_seed *= 7){
         move_and_precrystalize<<<get_grid_size(h_numero_particelle, H_NUM_THREAD), H_NUM_THREAD>>>(
                 d_vect_particle, d_vect_precrystal, d_matrix, h_x, h_y, h_iterazioni, h_numero_particelle, d_h_crystallized_particles_n, h_seed
