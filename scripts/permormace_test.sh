@@ -1,4 +1,2 @@
-
-for run in {1..10}; do
-    time ./out/main.o 3 5 10 4 1 2 0
-done
+time ./build/main_singlecore.o 50 100 1000000 1000 25 50 0
+time mpiexec -n 4 ./build/main_mpi.o 50 100 1000000 1000 25 50 0

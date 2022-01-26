@@ -5,7 +5,7 @@ __global__ void move_and_precrystalize(particle* g_particles, particle* g_vect_p
                                        int iterazioni, int numero_particelle, int* g_numero_particelle_output, int seed){
 
     int gloID = get_globalId();
-    if(gloID >= numero_particelle) return; // se il thread è fuori dal range delle particelle 
+    if(gloID >= numero_particelle || (g_particles[gloID].x < 0 && threadIdx.x != 0)) return; // se il thread è fuori dal range delle particelle 
 
     int locID = threadIdx.x;
     int rng_seed = gloID + seed;
@@ -14,37 +14,36 @@ __global__ void move_and_precrystalize(particle* g_particles, particle* g_vect_p
     s_crystallized = 0;
 
     particle p = g_particles[gloID];                                          //particella
-    if(check_crystal_neighbor(g_matrix, &p, len_x, len_y) == false){           // if non è stato precristallizato 
+    if((threadIdx.x == 0 && p.x >= 0) || threadIdx.x > 0){    
+        if(check_crystal_neighbor(g_matrix, &p, len_x, len_y) == false){           // if non è stato precristallizato 
 
-        int x_movement;
-        int y_movement;
+            int x_movement;
+            int y_movement;
 
-        int x = (lcg64_temper(&rng_seed) % 2 * (lcg64_temper(&rng_seed) % 2? 1: -1));
-        int y = (lcg64_temper(&rng_seed) % 2 * (lcg64_temper(&rng_seed) % 2? 1: -1));
+            int x = (lcg64_temper(&rng_seed) % 2 * (lcg64_temper(&rng_seed) % 2? 1: -1));
+            int y = (lcg64_temper(&rng_seed) % 2 * (lcg64_temper(&rng_seed) % 2? 1: -1));
 
-        x_movement =  p.x + x; // pick random x direction
-        y_movement =  p.y + y; // pick random y direction
-        if(!is_in_bounds(x_movement, y_movement, len_x, len_y)){
-            x_movement = p.x;
-            y_movement = p.y;
+            x_movement =  p.x + x; // pick random x direction
+            y_movement =  p.y + y; // pick random y direction
+            if(!is_in_bounds(x_movement, y_movement, len_x, len_y)){
+                x_movement = p.x;
+                y_movement = p.y;
+            }
+            p.x = x_movement;
+            p.y = y_movement;
+            g_particles[gloID] = p;
         }
-        p.x = x_movement;
-        p.y = y_movement;
-        g_particles[gloID] = p;
-    }
-    else{
-        g_vect_precrystal[gloID] = p;         // salva partiella sulle precristallizzate
-        atomicAdd(&s_crystallized, 1);        // incrementa contatore delle precristallizzate del blocco
-        g_particles[gloID].x = -1;            // invalida particella
+        else{
+            g_vect_precrystal[gloID] = p;         // salva partiella sulle precristallizzate
+            atomicAdd(&s_crystallized, 1);        // incrementa contatore delle precristallizzate del blocco
+            g_particles[gloID].x = -1;            // invalida particella
+        }
     }
     __syncthreads();
 
-    if(locID == 0){    
-        atomicAdd(g_numero_particelle_output, s_crystallized); //salva numero di particelle cristallizate nella globale
+    if(locID == 0){ 
+        atomicAdd(g_numero_particelle_output, s_crystallized);//salva numero di particelle cristallizate nella globale
     }
-
-
-
 }
 
 
@@ -116,21 +115,25 @@ __host__ int start_crystalline_growth(const int h_x, const int h_y, const int h_
     CHECK(cudaDeviceSynchronize());
 
     
-    for(int h_i = 0, h_seed = 0xEE234f12; h_i < h_iterazioni && h_numero_particelle > 0; h_i++, h_seed *= 7){
+    for(int h_i = 0, h_seed = 0xEE234f12; h_i < h_iterazioni && *d_h_crystallized_particles_n < h_numero_particelle; h_i++, h_seed *= 7){
         move_and_precrystalize<<<get_grid_size(h_numero_particelle, H_NUM_THREAD), H_NUM_THREAD>>>(
                 d_vect_particle, d_vect_precrystal, d_matrix, h_x, h_y, h_iterazioni, h_numero_particelle, d_h_crystallized_particles_n, h_seed
             );
         CHECK(cudaDeviceSynchronize());
         
-        if(*d_h_crystallized_particles_n < 0) continue;
+        //if(*d_h_crystallized_particles_n == 0) continue;
 
         crystallize<<<get_grid_size(h_numero_particelle, H_NUM_THREAD), H_NUM_THREAD>>>(d_vect_precrystal, d_matrix, h_y, h_numero_particelle);
         CHECK(cudaDeviceSynchronize());
         
-        sort_particles(d_vect_particle, h_numero_particelle, H_NUM_THREAD);
-        
-        h_numero_particelle -= *d_h_crystallized_particles_n; //aggiornamento del numero di particelle restanti
-        CHECK(cudaMemset(d_h_crystallized_particles_n, 0, 1));
+        //sort_particles(d_vect_particle, h_numero_particelle, H_NUM_THREAD);
+
+        //h_numero_particelle -= *d_h_crystallized_particles_n; //aggiornamento del numero di particelle restanti
+        //CHECK(cudaMemset(d_h_crystallized_particles_n, 0, 1));
+
+        //print_particle_vector<<<1,1>>>(d_vect_particle, h_numero_particelle);
+        //CHECK(cudaDeviceSynchronize());
+        //printf("\n");
     }
     //printf("NP: %i\n", h_numero_particelle);
 

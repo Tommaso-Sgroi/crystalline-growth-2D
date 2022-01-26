@@ -99,7 +99,9 @@ __global__ void print_field(int* field, int len_x, int len_y){
     
 }
 
-__global__ void odd_even_sort(particle* g_p, int pn, int phase){
+
+
+__global__ void odd_even_sort(particle* g_p, int pn, int phase, int* has_swapped){
     int gloid = get_globalId();
     if(gloid >= pn) return;
     
@@ -110,17 +112,32 @@ __global__ void odd_even_sort(particle* g_p, int pn, int phase){
         particle tmp = g_p[start];
         g_p[start] = g_p[end];
         g_p[end] = tmp;
+        *has_swapped = 1;
     }
 }
 
 
 __host__ void sort_particles(particle* d_p, int h_pn, int h_tn){
     int h_phase = 0;
+    int exit_fun = 0;
+    int* d_h_has_swapped;
+    CHECK(cudaMallocManaged(&d_h_has_swapped, sizeof(int)));
+    *d_h_has_swapped = 0;
     
     for(int i = 0; i < h_pn; i++){
 
-        odd_even_sort <<<get_grid_size(h_pn, h_tn), h_tn>>>(d_p, h_pn / 2, h_phase);
+        odd_even_sort <<<get_grid_size(h_pn, h_tn), h_tn>>>(d_p, h_pn / 2, h_phase, d_h_has_swapped);
         CHECK(cudaDeviceSynchronize());
+
+        if(*d_h_has_swapped > 0){
+            exit_fun++;
+        }
+        else{
+            exit_fun = 0;
+            *d_h_has_swapped = 0;
+        }
+
+        if(*d_h_has_swapped >= 2) return;
         
         h_phase = (h_phase + 1) % 2;
     }
