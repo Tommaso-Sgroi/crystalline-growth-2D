@@ -50,20 +50,19 @@ void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, stru
                     int x_movement;
                     int y_movement;
 
-                    do{
-                        int x = 0;
-                        int y = 0;
-                        x = (lcg64_temper_p(&p) % 3) - 1;
-                        y = (lcg64_temper_p(&p) % 3) - 1;
-                        
-                        x_movement =  p.x + x; // pick random x direction
-                        y_movement =  p.y + y; // pick random y direction
-                    }while(!is_in_bounds(x_movement, y_movement, space->len_x, space->len_y)); // finché non sceglie una direzione corretta continua a scegliere randomicamente
-                                                                                                // sostituibile con (!_movement | y_movement)
+                    int x = (lcg64_temper_p(&p) % 3) - 1;
+                    int y = (lcg64_temper_p(&p) % 3) - 1;
+
+                    x_movement =  p.x + x; // pick random x direction
+                    y_movement =  p.y + y; // pick random y direction
+                    if(!is_in_bounds(x_movement, y_movement, space->len_x, space->len_y)){
+                        x_movement = p.x;
+                        y_movement = p.y;
+                    }
                     p.x = x_movement;
                     p.y = y_movement;
 
-                    //particles->array[i] = p;
+                    particles->array[i] = p;
                 }
             }
             // cristallizza
@@ -121,7 +120,7 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
     build_field(&space);
     init_field(&space, posizione_seed_x, posizione_seed_y);
     build_vector_particle(&particles, numero_particelle, space.len_x, space.len_y, posizione_seed_x, posizione_seed_y);
-    //print_array(&particles);
+    print_array(&particles);
     //muovo e precristallizzo
     move_and_precrystalize(&particles, &precrystallized_particles, &space, iterazioni);
 

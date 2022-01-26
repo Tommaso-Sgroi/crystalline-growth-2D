@@ -42,20 +42,18 @@ void move_and_precrystalize(arraylist *particles, arraylist *precrystalize,  str
             int x_movement;
             int y_movement;
 
-               do{
-                int x = 0;
-                int y = 0;
-                x = (lcg64_temper_p(&p) % 3) - 1;
-                y = (lcg64_temper_p(&p) % 3) - 1;
+            int x = (lcg64_temper_p(&p) % 3) - 1;
+            int y = (lcg64_temper_p(&p) % 3) - 1;
 
-                x_movement =  p.x + x; // pick random x direction
-                y_movement =  p.y + y; // pick random y direction
-            }while(0 == is_in_bounds(x_movement, y_movement, space->len_x, space->len_y));
-         
-            //printf("i= %i HOST %i, Muove particella: (%d, %d) in (%d, %d)\n",iterazione, IdHost, p.x, p.y, x_movement, y_movement);
+            x_movement =  p.x + x; // pick random x direction
+            y_movement =  p.y + y; // pick random y direction
+            if(!is_in_bounds(x_movement, y_movement, space->len_x, space->len_y)){
+                x_movement = p.x;
+                y_movement = p.y;
+            }
             p.x = x_movement;
             p.y = y_movement;
-            //p.rng = lcg64_temper_i(p.rng);
+
             particles->array[i] = p;
 
         }
