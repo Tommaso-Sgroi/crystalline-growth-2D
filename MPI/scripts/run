@@ -1,4 +1,4 @@
-mpiexec -n 4 ./out/main.o 3 5 10 1 1 2 1
+mpiexec -n 4 ./out/main.o 30 50 1000 15 15 25 1
 # x = string_to_int(argv[1]);
 #    int y = string_to_int(argv[2]);
 #    int iterazioni = string_to_int(argv[3]);

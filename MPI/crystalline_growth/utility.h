@@ -31,6 +31,13 @@ int write_output(struct space* s){
 }
 
 
+void calculate_displacement(int* vector_disp, int* disp, int Nhost){
+    disp[0] = 0;
+    for (int i = 1; i < Nhost; i++)
+        disp[i] = disp[i - 1] + vector_disp[i - 1];
+}
+
+
 int temper(int x)
 {
 	x ^= x>>11;

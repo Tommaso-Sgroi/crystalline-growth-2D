@@ -63,7 +63,7 @@ void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, stru
                     p.x = x_movement;
                     p.y = y_movement;
 
-                    particles->array[i] = p;
+                    //particles->array[i] = p;
                 }
             }
             // cristallizza

@@ -63,6 +63,15 @@ void move_and_precrystalize(arraylist *particles, arraylist *precrystalize,  str
 }
 
 
+void crystallizes(struct space* space, particle* all_precrystalls, int totale_precristalli){
+    //cristallizzo (aggiorno la matrice su ogni host)
+    for (int i = 0; i < totale_precristalli; i++){
+        particle* p = &all_precrystalls[i];
+        space->field[p->x][p->y] = 1;
+    }
+}
+
+
 void build_vector_particle(arraylist* particles, int numero_particelle, int len_x, int len_y, particle seed){
     
     for (int i = 0; i < numero_particelle; i++){
@@ -87,6 +96,8 @@ void reset_array(arraylist *particles){
     particles->used = 0;
 }
 
+
+
 int start_crystalline_growth(const int x, const int y, const int iterazioni, const int numero_particelle,
            particle seed,int IDhost, int Nhost, int write_out){
     
@@ -98,10 +109,11 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
     int totale_precristalli = 0;                                //precristalli totali cioè di tutte le macchine ( è un count)
     int totale_particelle_rimaste = numero_particelle;
     
-    int* vet_precristal_x_host = malloc(Nhost * sizeof(int));   //vettore contenente il numero di precristalli su ogni host
-    int* vet_particles_x_host = malloc(Nhost * sizeof(int));    //vettore contenente il numero di particelle su ogni host
-    int* disp = malloc(Nhost * sizeof(int));                    //serve per la allgaterv e scatterv, indica dove iniziare a mettere i valori (offset)
-    arraylist particles, local_particles, local_precrystallized_particles, allprecristal; //vettore particelle e precristalli locali e totali
+    int vet_precristal_x_host [Nhost];   //vettore contenente il numero di precristalli su ogni host
+    int vet_particles_x_host[Nhost];    //vettore contenente il numero di particelle su ogni host
+    int disp [Nhost];                    //serve per la allgaterv e scatterv, indica dove iniziare a mettere i valori (offset)
+    arraylist particles, local_particles, local_precrystallized_particles; //vettore particelle e precristalli locali e totali
+    particle all_precrystalls [numero_particelle];
 
     //assegna ad ogni host il numero di particelle che deve muovere
     if(numero_particelle%Nhost==0){
@@ -124,21 +136,18 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
     if (IDhost == 0){                                          //solo host zero crea il vettore di tutte le particelle
         initArray(&particles, numero_particelle);
         build_vector_particle(&particles, numero_particelle, space.len_x, space.len_y, seed);
-
-        print_array(&particles);
     }
-    //offset per scatterv
-    disp[0] = 0;
-    for (int i = 1; i < Nhost; i++)
-        disp[i] = disp[i - 1] + vet_particles_x_host[i - 1];
+    
+    calculate_displacement(vet_particles_x_host, disp, Nhost); //offset per scatterv
 
     //distribuisco a tutti gli host le relative particelle
-    MPI_Scatterv(particles.array, vet_particles_x_host, disp, mpi_particle_type, local_particles.array, vet_particles_x_host[IDhost], mpi_particle_type, 0, MPI_COMM_WORLD);
+    MPI_Scatterv(particles.array, vet_particles_x_host, disp, mpi_particle_type, local_particles.array,
+                 vet_particles_x_host[IDhost], mpi_particle_type, 0, MPI_COMM_WORLD);
     local_particles.used = vet_particles_x_host[IDhost];
 
     initArray(&local_precrystallized_particles, vet_particles_x_host[IDhost]);
     
-    free(vet_particles_x_host);
+    //free(vet_particles_x_host);
     if(IDhost==0)
         freeArray(&particles);
 
@@ -154,36 +163,24 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
         MPI_Allgather(&local_precrystallized_particles.used, 1, MPI_INT, vet_precristal_x_host, 1, MPI_INT, MPI_COMM_WORLD);
         MPI_Allreduce(&local_precrystallized_particles.used, &totale_precristalli, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
-        //offset per allgatherv 
-        disp[0] = 0;
-        for (int i = 1; i < Nhost; i++)
-            disp[i] = disp[i - 1] + vet_precristal_x_host[i - 1];
+         
+        calculate_displacement(vet_precristal_x_host, disp, Nhost); //offset per allgatherv
 
-        //vettore contenente tutti i precristalli (di ogni host)
-        initArray(&allprecristal, totale_precristalli);
         //raccoglie tutti i precristalli (ogni host avrà il vettore di tutti i precristalli creati sui singoli host)
-        MPI_Allgatherv(local_precrystallized_particles.array, local_precrystallized_particles.used, mpi_particle_type, allprecristal.array, vet_precristal_x_host, disp, mpi_particle_type, MPI_COMM_WORLD);
+        MPI_Allgatherv(local_precrystallized_particles.array, local_precrystallized_particles.used, mpi_particle_type, 
+                       all_precrystalls, vet_precristal_x_host, disp, mpi_particle_type, MPI_COMM_WORLD);
 
-        //cristallizzo (aggiorno la matrice su ogni host)
-        for (int i = 0; i < totale_precristalli; i++){
-            space.field[allprecristal.array[i].x][allprecristal.array[i].y] = 1;
-            //printf("i= %i, HOST: %i, cristalli TOTALI in: %i, %i\n",k, IDhost, allprecristal.array[i].x, allprecristal.array[i].y);
-        }
+        crystallizes(&space, all_precrystalls, totale_precristalli);
 
-        freeArray(&allprecristal);
-        //svuoto vettore dei precristalli locali
-    	reset_array(&local_precrystallized_particles);
+    	reset_array(&local_precrystallized_particles); //svuoto vettore dei precristalli locali
                                
         totale_precristalli = 0;
-        //printf("____________\n");
     }
     freeArray(&local_precrystallized_particles);
     freeArray(&local_particles);
-    free(vet_precristal_x_host);
-    free(disp);
     MPI_Type_free(&mpi_particle_type);
 
-    if (IDhost == 0 && write_out == 1){
+    if(IDhost == 0 && write_out == 1){
         return write_output(&space);
     }
 
