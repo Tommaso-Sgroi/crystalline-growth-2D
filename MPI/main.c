@@ -16,8 +16,14 @@ int main(int argc, const char* argv[]) {
 
     particle seed = {posizione_seed_x, posizione_seed_y};
 
+    int IDhost, Nhost;
+
     MPI_Init(NULL, NULL);
-    int out = start_crystalline_growth(x, y, iterazioni, numero_particelle, seed, output);
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &IDhost);
+    MPI_Comm_size(MPI_COMM_WORLD, &Nhost); 
+
+    int out = start_crystalline_growth(x, y, iterazioni, numero_particelle, seed, IDhost, Nhost, output);
     MPI_Finalize();
     return out;
 }

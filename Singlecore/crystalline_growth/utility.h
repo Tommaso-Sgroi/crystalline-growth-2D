@@ -42,7 +42,7 @@ int write_output(struct space* s){
 
     for(int x = 0; x < s->len_x; x++){
         for(int y = 0; y < s->len_y; y++){
-            fprintf(f, "%s", s->field[x][y] == 1? "C": "0");
+            fprintf(f, "%s ", s->field[x][y] == 1? "C": "0");
         }
         fprintf(f, "%s", "\n");
     }

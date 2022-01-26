@@ -38,7 +38,7 @@ void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, stru
 
     for(int k = 0; k < iterazioni; k++){
         if(particles->used > 0){
-            for(int i = particles->used - 1 ;; i--){
+            for (int i = particles->used-1 ; i >= 0; i--){
                 particle p = particles->array[i];
 
                 if(check_crystal_neighbor(space,  &p)){
@@ -60,14 +60,10 @@ void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, stru
                         y_movement =  p.y + y; // pick random y direction
                     }while(!is_in_bounds(x_movement, y_movement, space->len_x, space->len_y)); // finché non sceglie una direzione corretta continua a scegliere randomicamente
                                                                                                 // sostituibile con (!_movement | y_movement)
-                     p.x = x_movement;
-                     p.y = y_movement;
+                    p.x = x_movement;
+                    p.y = y_movement;
 
-                     //printf("Si muove in (%i, %i)\n", p->x, p->y);
-
-                }
-                if(i == 0) {
-                    break; 
+                    particles->array[i] = p;
                 }
             }
             // cristallizza
@@ -92,7 +88,7 @@ void build_vector_particle(arraylist* particles_final, int numero_particelle, in
     particle seed = {posizione_seed_x, posizione_seed_y};
     for (int i = 0; i < numero_particelle; i++){
         int rng_seed = (7 + i) * (7 * i + 1);
-        printf("Seed: %i\n", rng_seed);
+        //printf("Seed: %i\n", rng_seed);
         particle p;
         do
         {
@@ -125,7 +121,7 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
     build_field(&space);
     init_field(&space, posizione_seed_x, posizione_seed_y);
     build_vector_particle(&particles, numero_particelle, space.len_x, space.len_y, posizione_seed_x, posizione_seed_y);
-    print_array(&particles);
+    //print_array(&particles);
     //muovo e precristallizzo
     move_and_precrystalize(&particles, &precrystallized_particles, &space, iterazioni);
 
