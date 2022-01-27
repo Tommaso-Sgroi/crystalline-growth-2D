@@ -35,7 +35,6 @@ void print_grid(struct space* s, arraylist* p){
 
 
 void move_and_precrystalize(arraylist* particles, arraylist* precrystalize, struct space* space, int iterazioni){
-
     for(int k = 0; k < iterazioni; k++){
         if(particles->used > 0){
             for (int i = particles->used-1 ; i >= 0; i--){
