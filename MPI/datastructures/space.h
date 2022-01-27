@@ -20,57 +20,32 @@ struct space{
 };
 
 
-
-/*
-matrix:
-  y y y y y y y y y 
- x
- x
- x
- x
- x
- x
-
-
- inzializzo il campo (la matrice che contiene le inte per le partiinte)
-*/
-/*int** build_field(const int x, const int y){
-
-        int** field = (int**) calloc(x, sizeof(int*));
-        for(int i = 0; i < x; i++){
-                field[i] = (int*) calloc(y, sizeof(int)); // TODO PARALLELIZZARE
-        }
-        return field;
-}*/
-
+//costruisce matrice
 void build_field(struct space* space)
 {
         space->field = (int**) calloc(space->len_x, sizeof(int*));
         for(int i = 0; i < space->len_x; i++){
-                space->field[i] = (int*) calloc(space->len_y, sizeof(int)); // TODO PARALLELIZZARE
+                space->field[i] = (int*) calloc(space->len_y, sizeof(int)); 
         }
 
 };
 
 
-void init_field(struct space* space, particle seed/*, const int numero_partiinte*/){ 
+void init_field(struct space* space, particle seed){ 
        for(int x = 0; x < space->len_x; x++){
                 for(int y = 0; y < space->len_y; y++){
-                        space->field[x][y] = -1; // inizializzo la inta
+                        space->field[x][y] = -1;
                 }
         space->field[seed.x][seed.y] = 1;                       
        }
 }
 
-
-
-
-#define IS_IN_BOUNDS(x, y, len_x, len_y) (x >= 0 && x < len_x && y >= 0 && y < len_y) // poi voglio vedere se e cosa cambia utilizzando questa macro o la funzione
-
+//controlla se la particella si muove nei limiti della matrice
 bool is_in_bounds(const int x, const int y, const int len_x, const int len_y){
         return x >= 0 && x < len_x && y >= 0 && y < len_y;
 }
 
+//controlla se la particella ha un cristallo vicino
 bool check_crystal_neighbor(struct space* space, particle* p){
         static int points []= {-1, -1, -1, 0, -1, 1, 0, -1, 0, 1, 1, -1, 1, 0, 1, 1};
         for (int i = 0; i < 16; i++){
@@ -103,11 +78,4 @@ void print_field(struct space* space){
         }
         printf("\n");
     }
-}
-
-void free_field(struct space* s){
-        for(int i = 0; i < s->len_x; i++){
-                free(s->field[i]);
-        }
-        free(s->field);
 }

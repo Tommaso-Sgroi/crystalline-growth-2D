@@ -20,6 +20,7 @@ __host__ int get_grid_size(int numero_particelle, const int NUM_THREAD){
     return (numero_particelle + NUM_THREAD - 1)/NUM_THREAD;
 }
 
+//stampa su file
 __host__ int write_output(struct space* s){
     FILE *f = fopen("output.space", "w");
     if (f == NULL){

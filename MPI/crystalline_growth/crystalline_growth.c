@@ -34,7 +34,6 @@ void move_and_precrystalize(arraylist *particles, arraylist *precrystalize,  str
 
         if (check_crystal_neighbor(space, &p)){
             insertArray(precrystalize, &p);
-            //printf("i= %i HOST: %i, Trovato cristallo: (%d, %d)\n",iterazione, IdHost, p.x, p.y);
             removeAt(particles, i);
         }
         else
@@ -54,15 +53,15 @@ void move_and_precrystalize(arraylist *particles, arraylist *precrystalize,  str
             p.x = x_movement;
             p.y = y_movement;
 
-            particles->array[i] = p;
+            particles->array[i] = p;        //aggiorno posizione della particella 
 
         }
     }
 }
 
-
+//cristallizzo (aggiorno la matrice su ogni host)
 void crystallizes(struct space* space, particle* all_precrystalls, int totale_precristalli){
-    //cristallizzo (aggiorno la matrice su ogni host)
+
     for (int i = 0; i < totale_precristalli; i++){
         particle* p = &all_precrystalls[i];
         space->field[p->x][p->y] = 1;
@@ -74,7 +73,6 @@ void build_vector_particle(arraylist* particles, int numero_particelle, int len_
     
     for (int i = 0; i < numero_particelle; i++){
         int rng_seed = (7 + i) * (7 * i + 1);
-        //printf("Seed: %i\n", rng_seed);
         particle p;
         do
         {
@@ -145,7 +143,6 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
 
     initArray(&local_precrystallized_particles, vet_particles_x_host[IDhost]);
     
-    //free(vet_particles_x_host);
     if(IDhost==0)
         freeArray(&particles);
 
@@ -179,7 +176,7 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
     MPI_Type_free(&mpi_particle_type);
 
     if(IDhost == 0 && write_out == 1){
-        return write_output(&space);
+        return write_output(&space);        //stampa
     }
 
     return 0;

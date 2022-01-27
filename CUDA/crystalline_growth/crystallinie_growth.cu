@@ -36,7 +36,7 @@ __global__ void move_and_precrystalize(particle* g_particles, particle* g_vect_p
     }
     __syncthreads();
 
-    if(locId == 0){ 
+    if(locId == 0 && s_crystallized > 0){ 
         atomicAdd(g_numero_particelle_output, s_crystallized);//salva numero di precristalli nella globale
     }
 }
@@ -92,7 +92,7 @@ __host__ int start_crystalline_growth(const int h_x, const int h_y, const int h_
     build_field(&h_space);              //costruisco il campo
     init_field(&h_space, h_posizione_seed_x, h_posizione_seed_y);
 
-    static const int H_NUM_THREAD = 1024;
+    static const int H_NUM_THREAD = 256;
     int* d_matrix;
     int* d_h_crystallized_particles_n;
     int* d_index; 
@@ -125,7 +125,7 @@ __host__ int start_crystalline_growth(const int h_x, const int h_y, const int h_
         move_and_precrystalize<<<get_grid_size(h_numero_particelle, H_NUM_THREAD), H_NUM_THREAD>>>(
                 d_vect_particle, d_vect_precrystal, d_matrix, h_x, h_y, h_numero_particelle, d_h_crystallized_particles_n);
         CHECK(cudaDeviceSynchronize());
-        
+         
         crystallize<<<get_grid_size(h_numero_particelle, H_NUM_THREAD), H_NUM_THREAD>>>(d_vect_precrystal, d_matrix, h_y, h_numero_particelle);
         CHECK(cudaDeviceSynchronize());
         if(*d_h_crystallized_particles_n == 0) continue;    //se non si sono creati precristalli 

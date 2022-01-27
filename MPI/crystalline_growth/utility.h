@@ -9,7 +9,7 @@
                         retval;\
                     })
 
-
+//stampa su file
 int write_output(struct space* s){
     FILE *f = fopen("output.space", "w");
     if (f == NULL){
