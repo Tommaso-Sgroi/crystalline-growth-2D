@@ -21,28 +21,6 @@ struct space{
 
 
 
-/*
-matrix:
-  y y y y y y y y y 
- x
- x
- x
- x
- x
- x
-
-
- inzializzo il campo (la matrice che contiene le inte per le partiinte)
-*/
-/*int** build_field(const int x, const int y){
-
-        int** field = (int**) calloc(x, sizeof(int*));
-        for(int i = 0; i < x; i++){
-                field[i] = (int*) calloc(y, sizeof(int)); // TODO PARALLELIZZARE
-        }
-        return field;
-}*/
-
 void build_field(struct space* space)
 {
         space->field = (int**) calloc(space->len_x, sizeof(int*));

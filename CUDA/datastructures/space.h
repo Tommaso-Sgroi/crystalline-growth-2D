@@ -20,21 +20,7 @@ struct space{
         int len_x, len_y;
 };
 
-
-
-/*
-matrix:
-  y y y y y y y y y 
- x
- x
- x
- x
- x
- x
-
-
- inzializzo il campo (matrice delle particelle)
-*/
+//costruisce matrice
 void build_field(struct space* space){
         space->field = (int**) calloc(space->len_x, sizeof(int*));
         for(int i = 0; i < space->len_x; i++){
@@ -52,11 +38,12 @@ void init_field(struct space* space, const int posizione_seed_x, const int posiz
        }
 }
 
-
-__device__ bool is_in_bounds(const int x, const int y, const int len_x, const int len_y){
+//controlla se la particella si muove nei limiti della matrice
+__device__ bool is_in_bounds(const int x, const int y, const int len_x, const int len_y){       
         return x >= 0 && x < len_x && y >= 0 && y < len_y;
 }
 
+//controlla se la particella ha un cristallo vicino
 __device__ bool check_crystal_neighbor(int* space, particle* p, int len_x, int len_y){
         int points []= {-1, -1, -1, 0, -1, 1, 0, -1, 0, 1, 1, -1, 1, 0, 1, 1};
         int flag = false;

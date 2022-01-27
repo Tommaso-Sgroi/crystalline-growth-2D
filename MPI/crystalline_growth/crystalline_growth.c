@@ -149,7 +149,7 @@ int start_crystalline_growth(const int x, const int y, const int iterazioni, con
     if(IDhost==0)
         freeArray(&particles);
 
-    for (int k = 0; k < iterazioni && totale_particelle_rimaste>0; k++)
+    for (int k = 0; k < iterazioni && totale_particelle_rimaste > 0; k++)
     { 
         totale_particelle_rimaste = 0;
 

@@ -104,38 +104,4 @@ void print_array(arraylist* a){
   }
 }
 
-// int fakemain(int argc, char const *argv[])
-// {
-//   arraylist a;
-//   int i;
-
-//   initArray(&a, 5);  // initially 5 elements
-//   for (i = 0; i < 10; i++)
-//     insertArray(&a, i);  // automatically resizes as necessary
-//   printf("usata: %ld\n", a.used);  // print number of elements
-
-//   // removeElement(&a, 1);
-//   // removeElement(&a, 5);
-//   // removeElement(&a, 9);
-
-//   insertAt(&a, 0, 100);
-
-//   printf("usata dopo aggiunta: %ld\n", a.used);  // print number of elements
-
-//   for (i = 0; i < a.used; i++)
-//     printf("%d\n", a.array[i]);
-//   printf("size totale: %lu\n", a.size);
-
-//   removeAt(&a, 0);
-//    for (i = 0; i < a.used; i++)
-//     printf("%d\n", a.array[i]);
-//   printf("size : %lu\n", a.used);
-//   return 0;
-// }
-
-// int main(int argc, char const *argv[])
-// {
-//   fakemain(argc, argv);
-//   return 0;
-// }
 

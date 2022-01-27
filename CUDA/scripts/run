@@ -1,4 +1,4 @@
-time ./out/main.o 1000 500 10000000 250000 250 250 1
+time ./out/main.o 1000 1000 10000000 250000 250 250 0
 #./out/main_singlecore.o 30 50 10000 200 15 25 0
 
 #    int x = string_to_int(argv[1]);
