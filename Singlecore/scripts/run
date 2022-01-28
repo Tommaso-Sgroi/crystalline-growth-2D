@@ -1,7 +1,14 @@
-time ./out/main.o 5 10 10000000 25 2 5 1
+echo "Test 1"
+time ./out/main.o 5 10 10000 25 2 5 0
 
+echo "test 2"
+time ./out/main.o 20 30 10000 600 10 15 0
 
+echo "test 3"
+time ./out/main.o 200 300 100000 6000 100 150 0
 
+echo "test 4"
+time ./out/main.o 500 1000 10000000 500000 250 500 0
 
 #    int x = string_to_int(argv[1]);
 #    int y = string_to_int(argv[2]);

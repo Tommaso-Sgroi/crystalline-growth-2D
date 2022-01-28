@@ -103,7 +103,7 @@ __host__ int start_crystalline_growth(const int h_x, const int h_y, const int h_
 
     int h_buffer_field[h_x * h_y];
     
-    transform_2D_space_in_1D_array(&h_space, h_buffer_field); //serve per trasformare la matrice in vettore in modo da allocarla nella global memory
+    transform_2D_space_in_1D_array(&h_space, h_buffer_field);       //serve per trasformare la matrice in vettore in modo da allocarla nella global memory
 
     //malloc for global memory
     CHECK(cudaMalloc((void**) &d_matrix, h_x * h_y * sizeof(int)));
@@ -118,9 +118,7 @@ __host__ int start_crystalline_growth(const int h_x, const int h_y, const int h_
     CHECK(cudaMemset(d_h_crystallized_particles_n, 0, sizeof(int)));
     CHECK(cudaMemset(d_vect_precrystal, -1, h_numero_particelle * sizeof(particle)));
 
-    build_vector_particle<<<get_grid_size(h_numero_particelle, H_NUM_THREAD), H_NUM_THREAD>>>(
-        d_vect_particle, h_numero_particelle, h_space.len_x, h_space.len_y, h_posizione_seed_x, h_posizione_seed_y
-        );
+    build_vector_particle<<< get_grid_size(h_numero_particelle, H_NUM_THREAD), H_NUM_THREAD  >>>(d_vect_particle, h_numero_particelle, h_space.len_x, h_space.len_y, h_posizione_seed_x, h_posizione_seed_y);
     CHECK(cudaDeviceSynchronize());
 
     for(int h_i = 0; h_i < h_iterazioni && h_numero_particelle > 0; h_i++){
